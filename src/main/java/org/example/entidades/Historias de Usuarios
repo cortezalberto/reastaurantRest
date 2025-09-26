@@ -1,0 +1,274 @@
+Actores Principales:
+•	Administrador del Sistema (configuración y gestión global)
+•	Gerente de Sucursal (operaciones locales)
+•	Cliente Registrado (experiencia de compra)
+•	Empleado de Cocina (preparación de pedidos)
+•	Empleado de Delivery (gestión de entregas)
+•	Analista de Ventas (reportes y análisis)
+Funcionalidades Clave Cubiertas:
+•	Gestión completa de productos (insumos y manufacturados)
+•	Sistema de pedidos (delivery y takeaway)
+•	Estructura empresarial (empresa → sucursales)
+•	Promociones y descuentos
+•	Integración de pagos (MercadoPago)
+•	Autenticación (Auth0)
+•	Reportes de ventas y análisis
+Características Importantes:
+•	Criterios de aceptación específicos y medibles
+•	Historias técnicas para integraciones
+•	Criterios transversales (performance, seguridad, usabilidad)
+•	Roadmap de desarrollo organizado en sprints
+•	Priorización del MVP y funcionalidades avanzadas
+Las historias siguen el formato estándar "Como [actor] quiero [funcionalidad] para [beneficio]" y están diseñadas para ser implementables, testables y que aporten valor real al negocio. El roadmap sugiere un desarrollo iterativo comenzando con el MVP en el primer sprint.
+Historias de Usuario - Sistema de Gestión Empresarial
+ÉPICAS PRINCIPALES
+Épica 1: Gestión de Productos y Catálogo
+Épica 2: Gestión de Pedidos y Ventas
+Épica 3: Gestión de Clientes
+Épica 4: Gestión de Promociones
+Épica 5: Administración del Sistema
+________________________________________
+ACTOR: ADMINISTRADOR DEL SISTEMA
+Gestión de Empresa y Sucursales
+US-001: Configurar datos de la empresa
+•	Como administrador del sistema
+•	Quiero configurar los datos básicos de mi empresa (nombre, razón social, CUIL)
+•	Para tener la información corporativa centralizada en el sistema
+•	Criterios de aceptación:
+o	Puedo ingresar nombre comercial, razón social y CUIL
+o	El sistema valida formato correcto del CUIL
+o	Los datos se guardan y muestran en reportes
+US-002: Gestionar sucursales
+•	Como administrador del sistema
+•	Quiero crear, modificar y eliminar sucursales
+•	Para mantener actualizada la estructura organizacional
+•	Criterios de aceptación:
+o	Puedo crear sucursales con nombre, horarios y domicilio
+o	Puedo asignar categorías de productos a cada sucursal
+o	Puedo configurar promociones específicas por sucursal
+US-003: Configurar estructura geográfica
+•	Como administrador del sistema
+•	Quiero gestionar países, provincias y localidades
+•	Para organizar correctamente las direcciones del sistema
+•	Criterios de aceptación:
+o	Puedo crear jerarquía País → Provincia → Localidad
+o	Los domicilios se vinculan correctamente a localidades
+o	La información geográfica aparece en reportes
+Gestión de Productos
+US-004: Gestionar artículos insumo
+•	Como administrador del sistema
+•	Quiero crear y actualizar artículos insumo
+•	Para mantener control del inventario y costos
+•	Criterios de aceptación:
+o	Puedo definir precio de compra y venta
+o	Puedo establecer stock actual y máximo
+o	Puedo marcar si es para elaboración o venta directa
+US-005: Crear artículos manufacturados
+•	Como administrador del sistema
+•	Quiero configurar productos elaborados con sus recetas
+•	Para calcular costos y tiempos de preparación
+•	Criterios de aceptación:
+o	Puedo agregar múltiples insumos con cantidades
+o	Puedo definir tiempo estimado de preparación
+o	Puedo incluir instrucciones de preparación
+US-006: Organizar productos en categorías
+•	Como administrador del sistema
+•	Quiero crear categorías y subcategorías de productos
+•	Para facilitar la navegación y búsqueda
+•	Criterios de aceptación:
+o	Puedo crear jerarquías de categorías ilimitadas
+o	Puedo mover productos entre categorías
+o	Las categorías se muestran organizadas en el catálogo
+________________________________________
+ACTOR: GERENTE DE SUCURSAL
+Gestión Operativa
+US-007: Configurar horarios de sucursal
+•	Como gerente de sucursal
+•	Quiero establecer horarios de apertura y cierre
+•	Para que los clientes conozcan nuestros horarios de atención
+•	Criterios de aceptación:
+o	Puedo configurar horario de apertura y cierre
+o	Los horarios se muestran a los clientes
+o	El sistema valida que los horarios sean coherentes
+US-008: Gestionar promociones locales
+•	Como gerente de sucursal
+•	Quiero crear promociones específicas para mi sucursal
+•	Para aumentar las ventas y atraer clientes
+•	Criterios de aceptación:
+o	Puedo crear promociones con fechas y horarios específicos
+o	Puedo definir descuentos y precios promocionales
+o	Puedo asociar productos específicos a la promoción
+US-009: Monitorear inventario
+•	Como gerente de sucursal
+•	Quiero ver el estado del inventario en tiempo real
+•	Para realizar pedidos de restock oportunamente
+•	Criterios de aceptación:
+o	Veo stock actual vs máximo de cada producto
+o	Recibo alertas cuando el stock está bajo
+o	Puedo generar reportes de movimiento de inventario
+________________________________________
+ACTOR: CLIENTE REGISTRADO
+Experiencia de Compra
+US-010: Registrarse en el sistema
+•	Como cliente potencial
+•	Quiero crear una cuenta en el sistema
+•	Para realizar pedidos y acceder a promociones
+•	Criterios de aceptación:
+o	Puedo registrarme con email y datos personales
+o	Puedo agregar múltiples direcciones de entrega
+o	Recibo confirmación de registro por email
+US-011: Navegar catálogo de productos
+•	Como cliente registrado
+•	Quiero explorar los productos disponibles
+•	Para elegir qué deseo comprar
+•	Criterios de aceptación:
+o	Veo productos organizados por categorías
+o	Puedo filtrar por precio, tipo o sucursal
+o	Veo imágenes, descripciones y precios actualizados
+US-012: Realizar pedido con delivery
+•	Como cliente registrado
+•	Quiero hacer un pedido para entrega a domicilio
+•	Para recibir los productos en mi dirección
+•	Criterios de aceptación:
+o	Puedo agregar productos al carrito
+o	Puedo seleccionar dirección de entrega
+o	Recibo tiempo estimado de entrega
+US-013: Realizar pedido para takeaway
+•	Como cliente registrado
+•	Quiero hacer un pedido para retirar en sucursal
+•	Para ahorrar costo de envío
+•	Criterios de aceptación:
+o	Puedo seleccionar sucursal para retiro
+o	Veo tiempo estimado de preparación
+o	Recibo notificación cuando esté listo
+US-014: Ver historial de pedidos
+•	Como cliente registrado
+•	Quiero consultar mis pedidos anteriores
+•	Para repetir compras o hacer seguimiento
+•	Criterios de aceptación:
+o	Veo lista de pedidos con fechas y estados
+o	Puedo ver detalles de cada pedido
+o	Puedo repetir un pedido anterior fácilmente
+________________________________________
+ACTOR: EMPLEADO DE COCINA
+Gestión de Preparación
+US-015: Ver pedidos pendientes
+•	Como empleado de cocina
+•	Quiero ver la cola de pedidos a preparar
+•	Para organizar mi trabajo eficientemente
+•	Criterios de aceptación:
+o	Veo pedidos ordenados por tiempo de llegada
+o	Veo tiempo estimado de preparación de cada item
+o	Puedo marcar items como en preparación
+US-016: Consultar recetas
+•	Como empleado de cocina
+•	Quiero acceder a las recetas de productos manufacturados
+•	Para preparar los productos correctamente
+•	Criterios de aceptación:
+o	Veo lista de ingredientes con cantidades exactas
+o	Veo instrucciones paso a paso de preparación
+o	Puedo marcar productos como completados
+US-017: Actualizar estado de pedidos
+•	Como empleado de cocina
+•	Quiero cambiar el estado de los pedidos
+•	Para que el cliente y delivery conozcan el progreso
+•	Criterios de aceptación:
+o	Puedo marcar pedidos como "en preparación"
+o	Puedo marcar pedidos como "listos"
+o	Las notificaciones se envían automáticamente
+________________________________________
+ACTOR: EMPLEADO DE DELIVERY
+Gestión de Entregas
+US-018: Ver pedidos listos para entrega
+•	Como empleado de delivery
+•	Quiero ver pedidos preparados para entregar
+•	Para organizar mi ruta de entrega
+•	Criterios de aceptación:
+o	Veo pedidos listos ordenados por zona
+o	Veo dirección completa y datos del cliente
+o	Puedo marcar pedido como "en camino"
+US-019: Confirmar entrega
+•	Como empleado de delivery
+•	Quiero confirmar cuando entregué un pedido
+•	Para actualizar el estado y generar factura
+•	Criterios de aceptación:
+o	Puedo marcar pedido como "entregado"
+o	Se genera automáticamente la factura
+o	El cliente recibe confirmación de entrega
+________________________________________
+ACTOR: ANALISTA DE VENTAS
+Reportes y Análisis
+US-020: Generar reporte de ventas
+•	Como analista de ventas
+•	Quiero obtener reportes detallados de ventas
+•	Para analizar el rendimiento del negocio
+•	Criterios de aceptación:
+o	Puedo filtrar por fecha, sucursal o producto
+o	Veo ventas totales, cantidad de pedidos y ticket promedio
+o	Puedo exportar datos en Excel/PDF
+US-021: Analizar productos más vendidos
+•	Como analista de ventas
+•	Quiero identificar los productos más populares
+•	Para optimizar el inventario y promociones
+•	Criterios de aceptación:
+o	Veo ranking de productos por cantidad vendida
+o	Puedo analizar por período de tiempo
+o	Veo margen de ganancia por producto
+US-022: Evaluar efectividad de promociones
+•	Como analista de ventas
+•	Quiero medir el impacto de las promociones
+•	Para optimizar futuras campañas
+•	Criterios de aceptación:
+o	Veo incremento de ventas durante promociones
+o	Puedo comparar ventas antes/durante/después
+o	Veo ROI de cada promoción
+________________________________________
+HISTORIAS TÉCNICAS
+Integración y Pagos
+US-023: Integrar con MercadoPago
+•	Como desarrollador del sistema
+•	Quiero integrar pagos con MercadoPago
+•	Para que los clientes puedan pagar online
+•	Criterios de aceptación:
+o	Los pagos se procesan correctamente
+o	Se almacenan todos los datos de la transacción
+o	Se maneja correctamente fallos de pago
+US-024: Autenticación con Auth0
+•	Como desarrollador del sistema
+•	Quiero implementar login con Auth0
+•	Para que los usuarios accedan de forma segura
+•	Criterios de aceptación:
+o	Los usuarios se autentican correctamente
+o	Se mantiene sesión activa apropiadamente
+o	Se manejan diferentes roles de usuario
+________________________________________
+CRITERIOS DE ACEPTACIÓN TRANSVERSALES
+Performance
+•	Todas las consultas deben responder en menos de 3 segundos
+•	El sistema debe soportar al menos 100 usuarios concurrentes
+•	Las imágenes deben cargar en menos de 2 segundos
+Usabilidad
+•	La interfaz debe ser responsive para móviles y desktop
+•	Debe seguir principios de accesibilidad web (WCAG 2.1)
+•	Los formularios deben validar datos en tiempo real
+Seguridad
+•	Todas las contraseñas deben encriptarse
+•	Los datos sensibles deben transmitirse por HTTPS
+•	Se debe registrar log de acciones críticas
+Confiabilidad
+•	El sistema debe tener 99.5% de uptime
+•	Debe realizar backup automático diario
+•	Debe recuperarse automáticamente de fallos menores
+________________________________________
+ROADMAP DE DESARROLLO
+Sprint 1 (MVP)
+•	US-001, US-002, US-004, US-010, US-011, US-012
+Sprint 2
+•	US-005, US-006, US-013, US-014, US-023
+Sprint 3
+•	US-007, US-008, US-015, US-016, US-017, US-024
+Sprint 4
+•	US-018, US-019, US-020, US-021
+Sprint 5
+•	US-003, US-009, US-022
+

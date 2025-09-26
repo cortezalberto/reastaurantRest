@@ -1,0 +1,295 @@
+@startuml Sistema_Gestion_Empresarial
+
+!define ENTITY class
+!define ABSTRACT abstract class
+!define ENUM enum
+
+skinparam class {
+    BackgroundColor<<Entity>> LightBlue
+    BackgroundColor<<Abstract>> LightGray
+    BackgroundColor<<Enum>> LightYellow
+    BackgroundColor<<Value>> LightGreen
+}
+
+' ===== CLASE BASE ABSTRACTA =====
+ABSTRACT Base <<Abstract>> {
+    - Long id
+    - String nombre
+    - boolean eliminado = false
+    + {abstract} String getInfo()
+}
+
+' ===== ENUMERACIONES =====
+ENUM Estado <<Enum>> {
+    PREPARACION
+    PENDIENTE
+    CANCELADO
+    RECHAZADO
+    ENTREGADO
+}
+
+ENUM FormaPago <<Enum>> {
+    EFECTIVO
+    MERCADOPAGO
+}
+
+ENUM TipoDeEnvio <<Enum>> {
+    TAKEAWAY
+    DELIVERY
+}
+
+ENUM TipoPromocion <<Enum>> {
+    HAPPYHOUR
+    PROMOCION1
+}
+
+ENUM Rol <<Enum>> {
+    ADM
+    EMPLEADO
+    CLIENTE
+}
+
+' ===== ENTIDADES GEOGRÁFICAS =====
+ENTITY Pais <<Entity>> {
+    + String getInfo()
+}
+
+ENTITY Provincia <<Entity>> {
+    + String getInfo()
+}
+
+ENTITY Localidad <<Entity>> {
+    + String getInfo()
+}
+
+ENTITY Domicilio <<Entity>> {
+    - int numero
+    - int cp
+    + String getInfo()
+}
+
+' ===== ENTIDADES DE CONFIGURACIÓN =====
+ENTITY UnidadMedida <<Entity>> {
+    - String denominacion
+    + String getInfo()
+}
+
+ENTITY Imagen <<Entity>> {
+    - String denominacion
+    + String getInfo()
+}
+
+ENTITY Usuario <<Entity>> {
+    - String auth0Id
+    - String username
+    + String getInfo()
+}
+
+' ===== ARTÍCULOS =====
+ABSTRACT Articulo <<Abstract>> {
+    - String denominacion
+    - double precioVenta
+    + void addImagen(Imagen imagen)
+    + void removeImagen(Imagen imagen)
+}
+
+ENTITY ArticuloInsumo <<Entity>> {
+    - double precioCompra
+    - Integer stockActual
+    - Integer stockMaximo
+    - Boolean esParaElaborar
+    + String getInfo()
+}
+
+ENTITY ArticuloManufacturado <<Entity>> {
+    - String descripcion
+    - int tiempoEstimadoMinutos
+    - String preparacion
+    + void addDetalle(ArticuloManufacturadoDetalle detalle)
+    + void removeDetalle(ArticuloManufacturadoDetalle detalle)
+    + String getInfo()
+}
+
+ENTITY ArticuloManufacturadoDetalle <<Entity>> {
+    - Integer cantidad
+    + String getInfo()
+}
+
+' ===== CATEGORIZACIÓN =====
+ENTITY Categoria <<Entity>> {
+    - String denominacion
+    + void addArticulo(Articulo articulo)
+    + void removeArticulo(Articulo articulo)
+    + void addSubcategoria(Categoria subcategoria)
+    + void removeSubcategoria(Categoria subcategoria)
+    + String getInfo()
+}
+
+' ===== PROMOCIONES =====
+ENTITY Promocion <<Entity>> {
+    - String denominacion
+    - LocalDate fechaDesde
+    - LocalDate fechaHasta
+    - LocalTime horaDesde
+    - LocalTime horaHasta
+    - double precioDescuento
+    - double precioPromocional
+    + void addImagen(Imagen imagen)
+    + void removeImagen(Imagen imagen)
+    + void addArticulo(Articulo articulo)
+    + void removeArticulo(Articulo articulo)
+    + String getInfo()
+}
+
+' ===== ESTRUCTURA EMPRESARIAL =====
+ENTITY Empresa <<Entity>> {
+    - String razonSocial
+    - Integer cuil
+    + void addSucursal(Sucursal sucursal)
+    + void removeSucursal(Sucursal sucursal)
+    + String getInfo()
+}
+
+ENTITY Sucursal <<Entity>> {
+    - LocalTime horarioApertura
+    - LocalTime horarioCierre
+    + void addCategoria(Categoria categoria)
+    + void removeCategoria(Categoria categoria)
+    + void addPromocion(Promocion promocion)
+    + void removePromocion(Promocion promocion)
+    + String getInfo()
+}
+
+' ===== CLIENTES =====
+ENTITY Cliente <<Entity>> {
+    - String apellido
+    - String telefono
+    - String email
+    - LocalDate fechaNacimiento
+    + void addPedido(Pedido pedido)
+    + void removePedido(Pedido pedido)
+    + void addDomicilio(Domicilio domicilio)
+    + void removeDomicilio(Domicilio domicilio)
+    + String getInfo()
+}
+
+' ===== PEDIDOS Y FACTURACIÓN =====
+ENTITY Pedido <<Entity>> {
+    - LocalTime horaEstimadaFinalizacion
+    - Double total
+    - Double totalCosto
+    - LocalDate fechaPedido
+    + void addDetallePedido(DetallePedido detallePedido)
+    + void removeDetallePedido(DetallePedido detallePedido)
+    + String getInfo()
+}
+
+ENTITY DetallePedido <<Entity>> {
+    - Integer cantidad
+    - Double subTotal
+    + String getInfo()
+}
+
+ENTITY Factura <<Entity>> {
+    - LocalDate fechaFacturacion
+    - Integer mpPaymentId
+    - String mpMerchantOrderId
+    - String mpPreferenceId
+    - String mpPaymentType
+    - Double totalVenta
+    + String getInfo()
+}
+
+' ===== RELACIONES DE HERENCIA =====
+Base <|-- Pais
+Base <|-- Provincia
+Base <|-- Localidad
+Base <|-- Domicilio
+Base <|-- UnidadMedida
+Base <|-- Imagen
+Base <|-- Usuario
+Base <|-- Articulo
+Base <|-- ArticuloManufacturadoDetalle
+Base <|-- Categoria
+Base <|-- Promocion
+Base <|-- Empresa
+Base <|-- Sucursal
+Base <|-- Cliente
+Base <|-- Pedido
+Base <|-- DetallePedido
+Base <|-- Factura
+
+Articulo <|-- ArticuloInsumo
+Articulo <|-- ArticuloManufacturado
+
+' ===== RELACIONES GEOGRÁFICAS =====
+Pais ||--o{ Provincia : "contiene"
+Provincia ||--o{ Localidad : "contiene"
+Localidad ||--o{ Domicilio : "ubicada en"
+
+' ===== RELACIONES EMPRESARIALES =====
+Empresa ||--o{ Sucursal : "tiene"
+Sucursal }o--|| Domicilio : "ubicada en"
+Sucursal ||--o{ Categoria : "maneja"
+Sucursal ||--o{ Promocion : "ofrece"
+
+' ===== RELACIONES DE PRODUCTOS =====
+Articulo }o--|| UnidadMedida : "medido en"
+Articulo ||--o{ Imagen : "tiene"
+Categoria ||--o{ Articulo : "contiene"
+Categoria ||--o{ Categoria : "subcategorias"
+Categoria }o--o| Categoria : "categoria padre"
+
+ArticuloManufacturado ||--o{ ArticuloManufacturadoDetalle : "compuesto por"
+ArticuloManufacturadoDetalle }o--|| ArticuloInsumo : "usa"
+
+' ===== RELACIONES DE PROMOCIONES =====
+Promocion ||--o{ Imagen : "tiene"
+Promocion ||--o{ Articulo : "incluye"
+Promocion }o--|| TipoPromocion : "tipo"
+
+' ===== RELACIONES DE CLIENTES =====
+Cliente }o--|| Usuario : "tiene cuenta"
+Cliente }o--|| Imagen : "foto perfil"
+Cliente ||--o{ Domicilio : "vive en"
+Cliente ||--o{ Pedido : "realiza"
+
+' ===== RELACIONES DE PEDIDOS =====
+Pedido }o--|| Sucursal : "procesado en"
+Pedido }o--|| Domicilio : "entregado en"
+Pedido }o--|| Estado : "estado"
+Pedido }o--|| TipoDeEnvio : "tipo envío"
+Pedido }o--|| FormaPago : "forma pago"
+Pedido ||--|| Factura : "genera"
+Pedido ||--o{ DetallePedido : "contiene"
+
+DetallePedido }o--|| Articulo : "incluye"
+
+' ===== RELACIONES CON ENUMS =====
+Factura }o--|| FormaPago : "método pago"
+
+' ===== NOTAS Y COMENTARIOS =====
+note top of Base
+  Clase abstracta base que proporciona
+  campos comunes (id, nombre, eliminado)
+  y método abstracto getInfo()
+end note
+
+note right of Articulo
+  Clase abstracta que define
+  comportamiento común para
+  productos del sistema
+end note
+
+note bottom of Categoria
+  Implementa patrón Composite
+  para jerarquía de categorías
+end note
+
+note left of Pedido
+  Maneja el ciclo completo
+  del pedido desde creación
+  hasta entrega
+end note
+
+@enduml

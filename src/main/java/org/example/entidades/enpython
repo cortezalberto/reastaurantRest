@@ -1,0 +1,721 @@
+# ===== SISTEMA DE GESTIÓN EMPRESARIAL - PYTHON =====
+from abc import ABC, abstractmethod
+from datetime import datetime, date, time
+from enum import Enum
+from typing import Optional, List, Set, Union
+from pydantic import BaseModel, Field, validator
+from decimal import Decimal
+import uuid
+
+# ===== ENUMERACIONES =====
+
+class Estado(str, Enum):
+    PREPARACION = "PREPARACION"
+    PENDIENTE = "PENDIENTE"
+    CANCELADO = "CANCELADO"
+    RECHAZADO = "RECHAZADO"
+    ENTREGADO = "ENTREGADO"
+
+class FormaPago(str, Enum):
+    EFECTIVO = "EFECTIVO"
+    MERCADOPAGO = "MERCADOPAGO"
+
+class TipoDeEnvio(str, Enum):
+    TAKEAWAY = "TAKEAWAY"
+    DELIVERY = "DELIVERY"
+
+class TipoPromocion(str, Enum):
+    HAPPYHOUR = "HAPPYHOUR"
+    PROMOCION1 = "PROMOCION1"
+
+class Rol(str, Enum):
+    ADM = "ADM"
+    EMPLEADO = "EMPLEADO"
+    CLIENTE = "CLIENTE"
+
+class TipoSangre(str, Enum):
+    A_POSITIVO = "A+"
+    A_NEGATIVO = "A-"
+    B_POSITIVO = "B+"
+    B_NEGATIVO = "B-"
+    AB_POSITIVO = "AB+"
+    AB_NEGATIVO = "AB-"
+    O_POSITIVO = "O+"
+    O_NEGATIVO = "O-"
+
+class EspecialidadMedica(str, Enum):
+    CARDIOLOGIA = "Cardiología"
+    NEUROLOGIA = "Neurología"
+    PEDIATRIA = "Pediatría"
+    TRAUMATOLOGIA = "Traumatología"
+    GINECOLOGIA = "Ginecología"
+    UROLOGIA = "Urología"
+    OFTALMOLOGIA = "Oftalmología"
+    DERMATOLOGIA = "Dermatología"
+    PSIQUIATRIA = "Psiquiatría"
+    MEDICINA_GENERAL = "Medicina General"
+    CIRUGIA_GENERAL = "Cirugía General"
+    ANESTESIOLOGIA = "Anestesiología"
+
+# ===== CLASE BASE =====
+
+class Base(BaseModel, ABC):
+    id: Optional[int] = None
+    nombre: str
+    eliminado: bool = False
+
+    @abstractmethod
+    def get_info(self) -> str:
+        pass
+
+    class Config:
+        # Equivalent to @SuperBuilder behavior
+        allow_population_by_field_name = True
+        validate_assignment = True
+
+# ===== ENTIDADES GEOGRÁFICAS =====
+
+class Pais(Base):
+    def get_info(self) -> str:
+        return f"País: {self.nombre}"
+
+class Provincia(Base):
+    pais: Optional['Pais'] = None
+
+    def get_info(self) -> str:
+        pais_nombre = self.pais.nombre if self.pais else "N/A"
+        return f"Provincia: {self.nombre} - {pais_nombre}"
+
+class Localidad(Base):
+    provincia: Optional['Provincia'] = None
+
+    def get_info(self) -> str:
+        provincia_nombre = self.provincia.nombre if self.provincia else "N/A"
+        return f"Localidad: {self.nombre} - {provincia_nombre}"
+
+class Domicilio(Base):
+    numero: int
+    cp: int
+    localidad: Optional['Localidad'] = None
+
+    def get_info(self) -> str:
+        return f"Domicilio: {self.nombre} {self.numero} - CP: {self.cp}"
+
+# ===== ENTIDADES DE CONFIGURACIÓN =====
+
+class UnidadMedida(Base):
+    denominacion: str
+
+    def get_info(self) -> str:
+        return f"Unidad de Medida: {self.denominacion}"
+
+class Imagen(Base):
+    denominacion: str
+
+    def get_info(self) -> str:
+        return f"Imagen: {self.denominacion}"
+
+class Usuario(Base):
+    auth0_id: str = Field(alias="auth0Id")
+    username: str
+
+    def get_info(self) -> str:
+        return f"Usuario: {self.username} - {self.auth0_id}"
+
+# ===== ARTÍCULOS =====
+
+class Articulo(Base):
+    denominacion: str
+    precio_venta: float
+    unidad_medida: Optional['UnidadMedida'] = None
+    imagenes: Set['Imagen'] = Field(default_factory=set)
+
+    def add_imagen(self, imagen: 'Imagen'):
+        self.imagenes.add(imagen)
+
+    def remove_imagen(self, imagen: 'Imagen'):
+        self.imagenes.discard(imagen)
+
+class ArticuloInsumo(Articulo):
+    precio_compra: float
+    stock_actual: Optional[int] = None
+    stock_maximo: Optional[int] = None
+    es_para_elaborar: Optional[bool] = None
+
+    def get_info(self) -> str:
+        return f"ArticuloInsumo: {self.denominacion} - Stock: {self.stock_actual}"
+
+class ArticuloManufacturadoDetalle(Base):
+    cantidad: Optional[int] = None
+    articulo_insumo: Optional['ArticuloInsumo'] = None
+
+    def get_info(self) -> str:
+        insumo_nombre = self.articulo_insumo.denominacion if self.articulo_insumo else "N/A"
+        return f"Detalle: {self.cantidad} x {insumo_nombre}"
+
+class ArticuloManufacturado(Articulo):
+    descripcion: Optional[str] = None
+    tiempo_estimado_minutos: int
+    preparacion: Optional[str] = None
+    detalles_de_articulo: Set['ArticuloManufacturadoDetalle'] = Field(default_factory=set)
+
+    def add_detalle(self, detalle: 'ArticuloManufacturadoDetalle'):
+        self.detalles_de_articulo.add(detalle)
+
+    def remove_detalle(self, detalle: 'ArticuloManufacturadoDetalle'):
+        self.detalles_de_articulo.discard(detalle)
+
+    def get_info(self) -> str:
+        return f"ArticuloManufacturado: {self.denominacion} - Tiempo: {self.tiempo_estimado_minutos}min"
+
+# ===== CATEGORIZACIÓN =====
+
+class Categoria(Base):
+    denominacion: str
+    articulos: Set['Articulo'] = Field(default_factory=set)
+    subcategorias: Set['Categoria'] = Field(default_factory=set)
+    categoria_padre: Optional['Categoria'] = None
+
+    def add_articulo(self, articulo: 'Articulo'):
+        self.articulos.add(articulo)
+
+    def remove_articulo(self, articulo: 'Articulo'):
+        self.articulos.discard(articulo)
+
+    def add_subcategoria(self, subcategoria: 'Categoria'):
+        subcategoria.categoria_padre = self
+        self.subcategorias.add(subcategoria)
+
+    def remove_subcategoria(self, subcategoria: 'Categoria'):
+        subcategoria.categoria_padre = None
+        self.subcategorias.discard(subcategoria)
+
+    def get_info(self) -> str:
+        return f"Categoria: {self.denominacion} - {len(self.articulos)} artículos"
+
+# ===== PROMOCIONES =====
+
+class Promocion(Base):
+    denominacion: str
+    fecha_desde: date
+    fecha_hasta: date
+    hora_desde: time
+    hora_hasta: time
+    precio_descuento: float
+    precio_promocional: float
+    tipo_promocion: TipoPromocion
+    imagenes: Set['Imagen'] = Field(default_factory=set)
+    articulos: Set['Articulo'] = Field(default_factory=set)
+
+    def add_imagen(self, imagen: 'Imagen'):
+        self.imagenes.add(imagen)
+
+    def remove_imagen(self, imagen: 'Imagen'):
+        self.imagenes.discard(imagen)
+
+    def add_articulo(self, articulo: 'Articulo'):
+        self.articulos.add(articulo)
+
+    def remove_articulo(self, articulo: 'Articulo'):
+        self.articulos.discard(articulo)
+
+    def get_info(self) -> str:
+        return f"Promoción: {self.denominacion} - {self.tipo_promocion.value} - ${self.precio_promocional}"
+
+# ===== ESTRUCTURA EMPRESARIAL =====
+
+class Empresa(Base):
+    razon_social: str
+    cuil: Optional[int] = None
+    sucursales: Set['Sucursal'] = Field(default_factory=set)
+
+    def add_sucursal(self, sucursal: 'Sucursal'):
+        self.sucursales.add(sucursal)
+
+    def remove_sucursal(self, sucursal: 'Sucursal'):
+        self.sucursales.discard(sucursal)
+
+    def get_info(self) -> str:
+        return f"Empresa: {self.nombre} - {self.razon_social} - {len(self.sucursales)} sucursales"
+
+class Sucursal(Base):
+    horario_apertura: time
+    horario_cierre: time
+    promociones: Set['Promocion'] = Field(default_factory=set)
+    categorias: Set['Categoria'] = Field(default_factory=set)
+    domicilio: Optional['Domicilio'] = None
+
+    def add_categoria(self, categoria: 'Categoria'):
+        self.categorias.add(categoria)
+
+    def remove_categoria(self, categoria: 'Categoria'):
+        self.categorias.discard(categoria)
+
+    def add_promocion(self, promocion: 'Promocion'):
+        self.promociones.add(promocion)
+
+    def remove_promocion(self, promocion: 'Promocion'):
+        self.promociones.discard(promocion)
+
+    def get_info(self) -> str:
+        return f"Sucursal: {self.nombre} - {len(self.categorias)} categorías"
+
+# ===== CLIENTES =====
+
+class Cliente(Base):
+    apellido: str
+    telefono: str
+    email: str
+    fecha_nacimiento: date
+    imagen: Optional['Imagen'] = None
+    pedidos: Set['Pedido'] = Field(default_factory=set)
+    domicilios: Set['Domicilio'] = Field(default_factory=set)
+    usuario: Optional['Usuario'] = None
+
+    def add_pedido(self, pedido: 'Pedido'):
+        self.pedidos.add(pedido)
+
+    def remove_pedido(self, pedido: 'Pedido'):
+        self.pedidos.discard(pedido)
+
+    def add_domicilio(self, domicilio: 'Domicilio'):
+        self.domicilios.add(domicilio)
+
+    def remove_domicilio(self, domicilio: 'Domicilio'):
+        self.domicilios.discard(domicilio)
+
+    def get_info(self) -> str:
+        return f"Cliente: {self.nombre} {self.apellido} - {self.email}"
+
+# ===== PEDIDOS Y FACTURACIÓN =====
+
+class DetallePedido(Base):
+    cantidad: Optional[int] = None
+    sub_total: Optional[float] = None
+    articulo: Optional['Articulo'] = None
+
+    def get_info(self) -> str:
+        articulo_nombre = self.articulo.denominacion if self.articulo else "N/A"
+        return f"DetallePedido: {self.cantidad} x {articulo_nombre}"
+
+class Factura(Base):
+    fecha_facturacion: date
+    mp_payment_id: Optional[int] = None
+    mp_merchant_order_id: Optional[str] = None
+    mp_preference_id: Optional[str] = None
+    mp_payment_type: Optional[str] = None
+    forma_pago: FormaPago
+    total_venta: Optional[float] = None
+
+    def get_info(self) -> str:
+        return f"Factura: {self.id} - ${self.total_venta} - {self.forma_pago.value}"
+
+class Pedido(Base):
+    hora_estimada_finalizacion: Optional[time] = None
+    total: Optional[float] = None
+    total_costo: Optional[float] = None
+    estado: Estado
+    tipo_de_envio: TipoDeEnvio
+    forma_pago: FormaPago
+    fecha_pedido: date
+    detalle_pedidos: Set['DetallePedido'] = Field(default_factory=set)
+    sucursal: Optional['Sucursal'] = None
+    domicilio: Optional['Domicilio'] = None
+    factura: Optional['Factura'] = None
+
+    def add_detalle_pedido(self, detalle_pedido: 'DetallePedido'):
+        self.detalle_pedidos.add(detalle_pedido)
+
+    def remove_detalle_pedido(self, detalle_pedido: 'DetallePedido'):
+        self.detalle_pedidos.discard(detalle_pedido)
+
+    def get_info(self) -> str:
+        return f"Pedido: {self.id} - {self.estado.value} - ${self.total}"
+
+# ===== MAIN - LÓGICA DE PRUEBA =====
+
+def main():
+    print("===== SISTEMA DE GESTIÓN EMPRESARIAL - PYTHON =====\n")
+
+    try:
+        # Inicializar datos del sistema
+        empresa = inicializar_sistema()
+
+        # Mostrar información del sistema
+        mostrar_informacion_completa(empresa)
+
+        # Ejecutar consultas y análisis
+        ejecutar_consultas_importantes(empresa)
+
+        # Pruebas de funcionalidad
+        probar_funcionalidades_del_sistema(empresa)
+
+        print("\n===== FIN DEL SISTEMA =====")
+
+    except Exception as e:
+        print(f"Error en el sistema: {e}")
+        import traceback
+        traceback.print_exc()
+
+# ===== INICIALIZACIÓN DEL SISTEMA =====
+
+def inicializar_sistema() -> Empresa:
+    print("Inicializando sistema empresarial...\n")
+
+    # Crear estructura geográfica
+    datos_geograficos = crear_estructura_geografica()
+
+    # Crear usuarios y configuración base
+    configuracion_base = crear_configuracion_base()
+
+    # Crear artículos y productos
+    productos = crear_productos_y_articulos(configuracion_base['unidad_medida'], configuracion_base['imagenes'])
+
+    # Crear categorías
+    categorias = crear_categorias(productos['articulos_manufacturados'])
+
+    # Crear promociones
+    promociones = crear_promociones(productos['articulos_manufacturados'], configuracion_base['imagenes'])
+
+    # Crear sucursales
+    sucursales = crear_sucursales(datos_geograficos['domicilios'], categorias, promociones)
+
+    # Crear empresa
+    empresa = Empresa(
+        id=1,
+        nombre="TechFood Solutions",
+        razon_social="TechFood Solutions S.A.",
+        cuil=2035620636
+    )
+
+    for sucursal in sucursales:
+        empresa.add_sucursal(sucursal)
+
+    # Crear clientes y pedidos
+    clientes = crear_clientes_y_pedidos(datos_geograficos, configuracion_base, productos, sucursales[0])
+
+    print("Sistema inicializado correctamente.\n")
+    return empresa
+
+def crear_estructura_geografica() -> dict:
+    # País y provincia
+    argentina = Pais(id=1, nombre="Argentina")
+
+    mendoza = Provincia(id=1, nombre="Mendoza", pais=argentina)
+
+    # Localidades
+    maipu = Localidad(id=1, nombre="Maipú", provincia=mendoza)
+    godoy_cruz = Localidad(id=2, nombre="Godoy Cruz", provincia=mendoza)
+    guaymallen = Localidad(id=3, nombre="Guaymallén", provincia=mendoza)
+
+    # Domicilios
+    d1 = Domicilio(id=1, nombre="San Martín", localidad=maipu, cp=5501, numero=1000)
+    d2 = Domicilio(id=2, nombre="San Juan", localidad=godoy_cruz, cp=5502, numero=500)
+
+    return {
+        'localidades': [maipu, godoy_cruz, guaymallen],
+        'domicilios': [d1, d2]
+    }
+
+def crear_configuracion_base() -> dict:
+    # Usuarios
+    usuario1 = Usuario(id=1, nombre="Usuario Principal", auth0_id="001", username="DavidLopez")
+    usuario2 = Usuario(id=2, nombre="Usuario Secundario", auth0_id="002", username="TomasFerro")
+
+    # Imágenes
+    imagen1 = Imagen(id=1, nombre="Imagen Principal", denominacion="imagen-producto-principal.jpg")
+    imagen2 = Imagen(id=2, nombre="Imagen Secundaria", denominacion="imagen-producto-secundaria.jpg")
+
+    # Unidad de medida
+    unidad_medida = UnidadMedida(id=1, nombre="Kilogramo", denominacion="Kg")
+
+    return {
+        'usuarios': [usuario1, usuario2],
+        'imagenes': [imagen1, imagen2],
+        'unidad_medida': unidad_medida
+    }
+
+def crear_productos_y_articulos(unidad_medida: UnidadMedida, imagenes: List[Imagen]) -> dict:
+    # Artículos Insumo
+    cerveza = ArticuloInsumo(
+        id=1,
+        nombre="Cerveza Quilmes",
+        denominacion="Cerveza Quilmes 473ml",
+        precio_venta=150.0,
+        unidad_medida=unidad_medida,
+        precio_compra=80.0,
+        stock_actual=50,
+        stock_maximo=200,
+        es_para_elaborar=False
+    )
+
+    masa = ArticuloInsumo(
+        id=2,
+        nombre="Masa para Pizza",
+        denominacion="Masa fresca para pizza mediana",
+        precio_venta=200.0,
+        unidad_medida=unidad_medida,
+        precio_compra=120.0,
+        stock_actual=30,
+        stock_maximo=100,
+        es_para_elaborar=True
+    )
+
+    cerveza.add_imagen(imagenes[0])
+    masa.add_imagen(imagenes[1])
+
+    # Detalles para artículos manufacturados
+    detalle1 = ArticuloManufacturadoDetalle(id=1, nombre="Detalle Cerveza", cantidad=2, articulo_insumo=cerveza)
+    detalle2 = ArticuloManufacturadoDetalle(id=2, nombre="Detalle Masa", cantidad=1, articulo_insumo=masa)
+
+    # Artículos Manufacturados
+    pizza_especial = ArticuloManufacturado(
+        id=3,
+        nombre="Pizza Especial",
+        denominacion="Pizza Especial con ingredientes premium",
+        descripcion="Pizza artesanal con masa fresca, mozzarella premium y ingredientes seleccionados",
+        tiempo_estimado_minutos=25,
+        preparacion="Estirar masa, agregar salsa, queso e ingredientes. Hornear a 250°C por 12-15 min",
+        precio_venta=850.0,
+        unidad_medida=unidad_medida
+    )
+
+    combo = ArticuloManufacturado(
+        id=4,
+        nombre="Combo Pizza + Bebida",
+        denominacion="Combo completo pizza mediana + bebida",
+        descripcion="Combinación perfecta para una comida completa",
+        tiempo_estimado_minutos=30,
+        preparacion="Preparar pizza según receta estándar y servir con bebida fría",
+        precio_venta=950.0,
+        unidad_medida=unidad_medida
+    )
+
+    pizza_especial.add_detalle(detalle2)
+    pizza_especial.add_imagen(imagenes[0])
+
+    combo.add_detalle(detalle1)
+    combo.add_detalle(detalle2)
+    combo.add_imagen(imagenes[1])
+
+    return {
+        'articulos_insumo': [cerveza, masa],
+        'articulos_manufacturados': [pizza_especial, combo],
+        'detalles': [detalle1, detalle2]
+    }
+
+def crear_categorias(articulos: List[ArticuloManufacturado]) -> List[Categoria]:
+    principales = Categoria(id=1, nombre="Platos Principales", denominacion="Platos Principales")
+    pizzas = Categoria(id=2, nombre="Pizzas Especiales", denominacion="Pizzas Gourmet y Especiales")
+    bebidas = Categoria(id=3, nombre="Bebidas", denominacion="Bebidas Frías y Calientes")
+
+    principales.add_subcategoria(pizzas)
+    principales.add_subcategoria(bebidas)
+
+    for articulo in articulos:
+        principales.add_articulo(articulo)
+        pizzas.add_articulo(articulo)
+
+    return [principales, pizzas, bebidas]
+
+def crear_promociones(articulos: List[ArticuloManufacturado], imagenes: List[Imagen]) -> List[Promocion]:
+    from datetime import date, time, timedelta
+
+    promo_otono = Promocion(
+        id=1,
+        nombre="Promo Otoño 2024",
+        denominacion="Descuento especial de otoño",
+        fecha_desde=date.today() - timedelta(days=10),
+        fecha_hasta=date.today() + timedelta(days=20),
+        hora_desde=time(18, 0),
+        hora_hasta=time(23, 0),
+        precio_descuento=150.0,
+        precio_promocional=700.0,
+        tipo_promocion=TipoPromocion.PROMOCION1
+    )
+
+    happy_hour = Promocion(
+        id=2,
+        nombre="Happy Hour",
+        denominacion="2x1 en bebidas seleccionadas",
+        fecha_desde=date.today(),
+        fecha_hasta=date.today() + timedelta(days=30),
+        hora_desde=time(17, 0),
+        hora_hasta=time(20, 0),
+        precio_descuento=200.0,
+        precio_promocional=750.0,
+        tipo_promocion=TipoPromocion.HAPPYHOUR
+    )
+
+    promo_otono.add_imagen(imagenes[0])
+    promo_otono.add_articulo(articulos[0])
+
+    happy_hour.add_imagen(imagenes[1])
+    happy_hour.add_articulo(articulos[1])
+
+    return [promo_otono, happy_hour]
+
+def crear_sucursales(domicilios: List[Domicilio], categorias: List[Categoria], promociones: List[Promocion]) -> List[Sucursal]:
+    matriz = Sucursal(
+        id=1,
+        nombre="Casa Matriz Centro",
+        horario_apertura=time(11, 0),
+        horario_cierre=time(23, 0),
+        domicilio=domicilios[0]
+    )
+
+    sucursal2 = Sucursal(
+        id=2,
+        nombre="Sucursal Godoy Cruz",
+        horario_apertura=time(10, 30),
+        horario_cierre=time(23, 30),
+        domicilio=domicilios[1]
+    )
+
+    # Agregar categorías y promociones
+    for categoria in categorias:
+        matriz.add_categoria(categoria)
+        sucursal2.add_categoria(categoria)
+
+    for promocion in promociones:
+        matriz.add_promocion(promocion)
+        sucursal2.add_promocion(promocion)
+
+    return [matriz, sucursal2]
+
+def crear_clientes_y_pedidos(geograficos: dict, configuracion: dict, productos: dict, sucursal: Sucursal) -> List[Cliente]:
+    cliente1 = Cliente(
+        id=1,
+        nombre="David",
+        apellido="López",
+        telefono="2616649039",
+        email="david.lopez@email.com",
+        fecha_nacimiento=date(1990, 5, 15),
+        imagen=configuracion['imagenes'][0],
+        usuario=configuracion['usuarios'][0]
+    )
+
+    cliente2 = Cliente(
+        id=2,
+        nombre="Tomás",
+        apellido="Ferro",
+        telefono="2616849039",
+        email="tomas.ferro@email.com",
+        fecha_nacimiento=date(1988, 8, 20),
+        imagen=configuracion['imagenes'][1],
+        usuario=configuracion['usuarios'][1]
+    )
+
+    cliente1.add_domicilio(geograficos['domicilios'][0])
+    cliente2.add_domicilio(geograficos['domicilios'][1])
+
+    return [cliente1, cliente2]
+
+# ===== MÉTODOS DE VISUALIZACIÓN =====
+
+def mostrar_informacion_completa(empresa: Empresa):
+    print("===== INFORMACIÓN DE LA EMPRESA =====")
+    print(empresa.get_info())
+    print()
+
+    mostrar_sucursales(empresa)
+    mostrar_productos_y_categorias(empresa)
+    mostrar_promociones(empresa)
+
+def mostrar_sucursales(empresa: Empresa):
+    print("===== SUCURSALES =====")
+    for sucursal in empresa.sucursales:
+        print(f"• {sucursal.get_info()}")
+        print(f"  Horario: {sucursal.horario_apertura} - {sucursal.horario_cierre}")
+        if sucursal.domicilio:
+            print(f"  Dirección: {sucursal.domicilio.get_info()}")
+        print(f"  Categorías: {len(sucursal.categorias)}")
+        print(f"  Promociones: {len(sucursal.promociones)}")
+        print()
+
+def mostrar_productos_y_categorias(empresa: Empresa):
+    print("===== PRODUCTOS POR CATEGORÍA =====")
+    if empresa.sucursales:
+        sucursal = list(empresa.sucursales)[0]
+        for categoria in sucursal.categorias:
+            print(f"Categoría: {categoria.get_info()}")
+            for articulo in categoria.articulos:
+                print(f"  - {articulo.get_info()}")
+
+            if categoria.subcategorias:
+                for sub in categoria.subcategorias:
+                    print(f"  Subcategoría: {sub.get_info()}")
+            print()
+
+def mostrar_promociones(empresa: Empresa):
+    print("===== PROMOCIONES ACTIVAS =====")
+    if empresa.sucursales:
+        sucursal = list(empresa.sucursales)[0]
+        for promo in sucursal.promociones:
+            print(f"• {promo.get_info()}")
+            print(f"  Período: {promo.fecha_desde} al {promo.fecha_hasta}")
+            print(f"  Horario: {promo.hora_desde} - {promo.hora_hasta}")
+            print(f"  Descuento: ${promo.precio_descuento}")
+            print()
+
+# ===== CONSULTAS IMPORTANTES =====
+
+def ejecutar_consultas_importantes(empresa: Empresa):
+    print("===== CONSULTAS Y ANÁLISIS DEL SISTEMA =====\n")
+
+    analizar_productos_disponibles(empresa)
+    consultar_promociones_por_tipo(empresa)
+    mostrar_estructura_geografica(empresa)
+
+def analizar_productos_disponibles(empresa: Empresa):
+    print("ANÁLISIS DE PRODUCTOS:")
+    for sucursal in empresa.sucursales:
+        for categoria in sucursal.categorias:
+            for articulo in categoria.articulos:
+                print(f"• {articulo.denominacion} - ${articulo.precio_venta}")
+    print()
+
+def consultar_promociones_por_tipo(empresa: Empresa):
+    print("PROMOCIONES POR TIPO:")
+    promociones_por_tipo = {}
+
+    for sucursal in empresa.sucursales:
+        for promo in sucursal.promociones:
+            if promo.tipo_promocion not in promociones_por_tipo:
+                promociones_por_tipo[promo.tipo_promocion] = []
+            promociones_por_tipo[promo.tipo_promocion].append(promo)
+
+    for tipo, promociones in promociones_por_tipo.items():
+        print(f"• {tipo.value}: {len(promociones)} promociones")
+        for promo in promociones:
+            print(f"  - {promo.denominacion}")
+    print()
+
+def mostrar_estructura_geografica(empresa: Empresa):
+    print("ANÁLISIS GEOGRÁFICO:")
+    for sucursal in empresa.sucursales:
+        if sucursal.domicilio and sucursal.domicilio.localidad:
+            print(f"• {sucursal.nombre} ubicada en {sucursal.domicilio.localidad.get_info()}")
+    print()
+
+# ===== PRUEBAS DE FUNCIONALIDAD =====
+
+def probar_funcionalidades_del_sistema(empresa: Empresa):
+    print("===== PRUEBAS DE FUNCIONALIDAD =====\n")
+
+    probar_relaciones_bidireccionales(empresa)
+    probar_operaciones_crud(empresa)
+    probar_validaciones_de_datos()
+
+def probar_relaciones_bidireccionales(empresa: Empresa):
+    print("PRUEBA: Relaciones bidireccionales")
+
+    nueva_sucursal = Sucursal(
+        id=99,
+        nombre="Sucursal Temporal",
+        horario_apertura=time(9, 0),
+        horario_cierre=time(22, 0)
+    )
+
+    sucursales_antes = len(empresa.sucursales)
+    empresa.add_sucursal(nueva_sucursal
