@@ -120,11 +120,29 @@ public class PedidoService {
                 .tipoDeEnvio(pedido.getTipoDeEnvio() != null ? pedido.getTipoDeEnvio().name() : null)
                 .eliminado(pedido.isEliminado())
                 .sucursal(pedido.getSucursal() != null ? pedido.getSucursal().getNombre() : null)
+                .detalles(pedido.getDetallePedidos() != null ?
+                    pedido.getDetallePedidos().stream()
+                        .filter(d -> !d.isEliminado())
+                        .map(this::convertirDetallePedidoADto)
+                        .collect(Collectors.toList()) : List.of())
                 .cantidadItems(pedido.getDetallePedidos() != null ?
                     pedido.getDetallePedidos().stream()
                         .filter(d -> !d.isEliminado())
                         .mapToInt(d -> d.getCantidad())
                         .sum() : 0)
+                .build();
+    }
+
+    /**
+     * Convertir DetallePedido a DTO
+     */
+    private PedidoDto.DetallePedidoDto convertirDetallePedidoADto(org.example.entidades.DetallePedido detalle) {
+        return PedidoDto.DetallePedidoDto.builder()
+                .id(detalle.getId())
+                .nombre(detalle.getNombre())
+                .cantidad(detalle.getCantidad())
+                .subTotal(detalle.getSubTotal())
+                .articulo(detalle.getArticulo() != null ? detalle.getArticulo().getDenominacion() : null)
                 .build();
     }
 }

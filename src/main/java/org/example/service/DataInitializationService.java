@@ -482,13 +482,13 @@ public class DataInitializationService implements CommandLineRunner {
         pedido2 = pedidoRepository.save(pedido2);
         pedidos.add(pedido2);
 
-        // Pedido 3: Cliente David - Múltiples productos - PENDIENTE - EFECTIVO
+        // Pedido 3: Cliente David - Múltiples productos (3 detalles) - PENDIENTE - EFECTIVO
         Pedido pedido3 = Pedido.builder()
                 .nombre("Pedido #003")
                 .fechaPedido(LocalDate.now().minusDays(1))
                 .horaEstimadaFinalizacion(LocalTime.of(19, 45))
-                .total(1800.0)
-                .totalCosto(850.0)
+                .total(2750.0)
+                .totalCosto(1250.0)
                 .estado(Estado.PENDIENTE)
                 .tipoDeEnvio(TipoDeEnvio.DELIVERY)
                 .formaPago(FormaPago.EFECTIVO)
@@ -511,8 +511,24 @@ public class DataInitializationService implements CommandLineRunner {
                 .articulo(articulos.get(1))
                 .build();
 
+        DetallePedido detalle3c = DetallePedido.builder()
+                .nombre("Pizza Especial Extra x1")
+                .cantidad(1)
+                .subTotal(850.0)
+                .articulo(articulos.get(0))
+                .build();
+
+        DetallePedido detalle3d = DetallePedido.builder()
+                .nombre("Combo Pizza + Bebida Extra x1")
+                .cantidad(1)
+                .subTotal(100.0)
+                .articulo(articulos.get(1))
+                .build();
+
         pedido3.addDetallePedido(detalle3a);
         pedido3.addDetallePedido(detalle3b);
+        pedido3.addDetallePedido(detalle3c);
+        pedido3.addDetallePedido(detalle3d);
         pedido3 = pedidoRepository.save(pedido3);
         pedidos.add(pedido3);
 
@@ -585,12 +601,25 @@ public class DataInitializationService implements CommandLineRunner {
                 .formaPago(pedido.getFormaPago())
                 .build();
 
-        // Configurar datos específicos según forma de pago
+        // Configurar datos específicos según forma de pago con variaciones realistas
         if (pedido.getFormaPago() == FormaPago.MERCADOPAGO) {
-            factura.setMpPaymentId(123456789);
-            factura.setMpMerchantOrderId("MO-" + System.currentTimeMillis());
-            factura.setMpPreferenceId("PREF-" + System.currentTimeMillis());
-            factura.setMpPaymentType("credit_card");
+            // Simular diferentes tipos de pagos con MercadoPago
+            long basePaymentId = 123456789L + pedido.getId();
+            String orderSuffix = String.valueOf(System.currentTimeMillis()).substring(8);
+
+            factura.setMpPaymentId((int) basePaymentId);
+            factura.setMpMerchantOrderId("MO-" + orderSuffix);
+            factura.setMpPreferenceId("PREF-" + orderSuffix);
+
+            // Alternar entre diferentes tipos de pago
+            String[] paymentTypes = {"credit_card", "debit_card", "ticket"};
+            int typeIndex = (int) (pedido.getId() % paymentTypes.length);
+            factura.setMpPaymentType(paymentTypes[typeIndex]);
+
+            log.info("Factura creada para pedido {} con MercadoPago - PaymentID: {}, Tipo: {}",
+                    pedido.getNombre(), basePaymentId, paymentTypes[typeIndex]);
+        } else {
+            log.info("Factura creada para pedido {} con pago en EFECTIVO", pedido.getNombre());
         }
 
         factura = facturaRepository.save(factura);
@@ -598,5 +627,8 @@ public class DataInitializationService implements CommandLineRunner {
         // Asociar factura al pedido
         pedido.setFactura(factura);
         pedidoRepository.save(pedido);
+
+        log.info("Pedido {} ahora tiene factura asociada con total: ${}",
+                pedido.getNombre(), factura.getTotalVenta());
     }
 }
