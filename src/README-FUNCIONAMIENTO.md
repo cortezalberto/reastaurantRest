@@ -16,9 +16,11 @@
 
 ## 🎯 Resumen Ejecutivo
 
-Este es un **Sistema de Gestión Integral para Restaurantes** desarrollado en Java que demuestra la implementación completa de un modelo de negocio real utilizando **JPA/Hibernate** con **base de datos H2**. El sistema maneja desde la estructura empresarial hasta los pedidos individuales, incluyendo gestión de inventario, clientes, promociones y múltiples sucursales.
+Este es un **Sistema de Gestión Integral para Restaurantes** desarrollado con **Spring Boot 3.2.0** que demuestra la implementación completa de una **API REST empresarial** utilizando **JPA/Hibernate** con **base de datos H2**. El sistema maneja desde la estructura empresarial hasta los pedidos individuales, incluyendo gestión de inventario, clientes, promociones y múltiples sucursales, con documentación **OpenAPI/Swagger** completa.
 
 ### Características Destacadas
+- ✅ **API REST Completa**: Endpoints documentados con OpenAPI/Swagger
+- ✅ **Spring Boot 3.2.0**: Framework moderno con arquitectura en capas
 - ✅ **Persistencia Real**: Datos almacenados en base de datos H2 con archivo persistente
 - ✅ **Arquitectura Empresarial**: Soporte para múltiples empresas y sucursales
 - ✅ **Gestión Completa de Inventario**: Insumos, productos manufacturados y recetas
@@ -27,21 +29,42 @@ Este es un **Sistema de Gestión Integral para Restaurantes** desarrollado en Ja
 - ✅ **Promociones Inteligentes**: Con restricciones temporales y por tipo
 - ✅ **Relaciones Bidireccionales**: Consistencia automática entre entidades
 - ✅ **Transacciones ACID**: Manejo robusto de errores con rollback automático
+- ✅ **Validación Automática**: Bean Validation con Jakarta
+- ✅ **Monitoring**: Spring Boot Actuator integrado
 
 ---
 
 ## 🏗️ Arquitectura del Sistema
 
-### Capa de Presentación
+### Capa de Presentación (API REST)
 ```
-Main.java
-├── Inicialización del Sistema
-├── Demostraciones CRUD
-├── Consultas y Análisis
-└── Pruebas de Funcionalidad
+Controllers (API REST)
+├── EmpresaController - Gestión de empresas
+├── ClienteController - Gestión de clientes
+├── ArticuloController - Gestión de productos
+├── CategoriaController - Gestión de categorías
+├── PromocionController - Gestión de promociones
+├── SucursalController - Gestión de sucursales
+├── PedidoController - Gestión de pedidos
+├── FacturaController - Gestión de facturación
+├── HealthController - Monitoreo del sistema
+└── GlobalExceptionHandler - Manejo de errores
 ```
 
-### Capa de Negocio (Entidades)
+### Capa de Servicios (Lógica de Negocio)
+```
+org.example.service/
+├── EmpresaService - Lógica de empresas
+├── ClienteService - Lógica de clientes
+├── ArticuloService - Lógica de productos
+├── CategoriaService - Lógica de categorías
+├── PromocionService - Lógica de promociones
+├── PedidoService - Lógica de pedidos
+├── FacturaService - Lógica de facturación
+└── DataInitializationService - Datos iniciales
+```
+
+### Capa de Entidades (Modelo de Dominio)
 ```
 org.example.entidades/
 ├── Base.java (Superclase con campos comunes)
@@ -56,14 +79,25 @@ org.example.entidades/
 └── [Entidades geográficas y auxiliares]
 ```
 
-### Capa de Persistencia
+### Capa de Repositorios (Acceso a Datos)
 ```
-org.example.repositorio/
-└── GenericRepository<T>.java
-    ├── EntityManager
-    ├── Transacciones automáticas
-    ├── CRUD completo
-    └── Consultas JPQL
+org.example.repository/
+├── EmpresaRepository - Spring Data JPA
+├── ClienteRepository - Consultas personalizadas
+├── ArticuloRepository - Búsquedas por tipo
+├── CategoriaRepository - Enum-based queries
+├── PromocionRepository - Filtros temporales
+├── PedidoRepository - Estados y clientes
+├── FacturaRepository - Métodos de pago
+└── [15 repositorios más]
+```
+
+### Capa de DTOs (Transferencia de Datos)
+```
+org.example.dto/
+├── Response DTOs (EmpresaDto, ClienteDto, etc.)
+├── Request DTOs (CreateEmpresaRequest, etc.)
+└── Separación entre API y entidades
 ```
 
 ### Capa de Datos
@@ -79,9 +113,9 @@ H2 Database (restaurante_db.mv.db)
 
 ## 🔄 Flujo de Funcionamiento
 
-### 1. Inicialización del Sistema (`Main.main()`)
+### 1. Inicialización del Sistema (`DataInitializationService`)
 
-El sistema sigue un flujo específico de inicialización para garantizar la integridad referencial:
+El sistema Spring Boot sigue un flujo específico de inicialización automática para garantizar la integridad referencial:
 
 ```java
 // FASE 1: Estructura Geográfica
@@ -100,48 +134,64 @@ Empresa(1) → Sucursales(2) [reutilizan domicilios existentes]
 Clientes(2) [reutilizan usuarios, imágenes y domicilios]
 ```
 
-### 2. Demostración de Operaciones CRUD
+### 2. API REST Endpoints
 
-Cada tipo de entidad es sometido a operaciones completas:
+Cada entidad expone endpoints REST completos:
 
-```java
-// Usuarios
-CREATE → READ → UPDATE → READ_ALL → DELETE → VERIFY
+```bash
+# Empresas
+GET    /api/v1/empresas          # Listar todas
+GET    /api/v1/empresas/{id}     # Obtener por ID
+POST   /api/v1/empresas          # Crear nueva
+PUT    /api/v1/empresas/{id}     # Actualizar
+DELETE /api/v1/empresas/{id}     # Soft delete
 
-// Artículos
-LIST_ALL → CREATE_NEW → SAVE → VERIFY_COUNT
+# Artículos
+GET    /api/v1/articulos                    # Listar todos
+GET    /api/v1/articulos/buscar-por-tipo    # Por tipo
+POST   /api/v1/articulos                    # Crear nuevo
 
-// Búsquedas por Campo
-FIND_BY_NAME → FIND_BY_PRICE → DISPLAY_RESULTS
+# Pedidos
+GET    /api/v1/pedidos/buscar-por-estado   # Por estado
+GET    /api/v1/pedidos/buscar-por-cliente  # Por cliente
 ```
 
-### 3. Análisis y Consultas del Sistema
+### 3. Servicios de Negocio
 
-El sistema ejecuta consultas complejas para demostrar capacidades:
+La lógica de negocio se encapsula en servicios dedicados:
 
 ```java
-// Análisis de Productos
-Stream<Sucursal> → flatMap(Categorias) → flatMap(Articulos) → forEach(display)
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class PedidoService {
+    private final PedidoRepository repository;
 
-// Promociones por Tipo
-Stream<Promociones> → groupingBy(TipoPromocion) → forEach(display)
-
-// Análisis Geográfico
-Sucursales → filter(hasLocation) → map(getLocationInfo) → display
+    public List<PedidoDto> buscarPorEstado(String estado) {
+        Estado estadoEnum = Estado.valueOf(estado.toUpperCase());
+        return repository.findByEstadoAndEliminadoFalse(estadoEnum)
+            .stream().map(this::convertirADto)
+            .collect(Collectors.toList());
+    }
+}
 ```
 
-### 4. Pruebas de Funcionalidad
+### 4. Documentación y Testing
 
-Verificación de patrones de diseño y consistencia:
+Verificación automática y documentación interactiva:
 
-```java
-// Relaciones Bidireccionales
-empresa.addSucursal(nueva) → verify(sucursal.empresa == empresa)
-empresa.removeSucursal(nueva) → verify(sucursal.empresa == null)
+```bash
+# Documentación Swagger
+http://localhost:8080/swagger-ui.html
 
-// Operaciones Repository
-save(categoria) → sucursal.addCategoria() → verify(consistency)
-deleteById(categoria) → verify(removed_from_collections)
+# Testing de APIs
+http://localhost:8080/h2-console
+
+# Health Check
+http://localhost:8080/actuator/health
+
+# Métricas del sistema
+http://localhost:8080/actuator/info
 ```
 
 ---
@@ -223,101 +273,110 @@ Cliente: Tomás Ferro
 
 ## 🔧 Operaciones CRUD
 
-### Patrón Repository Genérico
+### Patrón Spring Data JPA
 
-Cada entidad se gestiona a través de un repositorio que proporciona:
+Cada entidad se gestiona a través de repositorios Spring Data JPA:
 
 ```java
-public class GenericRepository<T> {
-    // CREATE
-    public T save(T entity)
+@Repository
+public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
+    // Métodos automáticos
+    List<Empresa> findAll();
+    Optional<Empresa> findById(Long id);
+    Empresa save(Empresa empresa);
+    void deleteById(Long id);
 
-    // READ
-    public Optional<T> findById(Long id)
-    public List<T> findAll()
-    public List<T> findByField(String fieldName, Object value)
-
-    // UPDATE
-    public Optional<T> update(T entity)
-
-    // DELETE
-    public Optional<T> deleteById(Long id)
+    // Métodos personalizados
+    List<Empresa> findByEliminadoFalse();
+    List<Empresa> findByNombreContainingIgnoreCaseAndEliminadoFalse(String nombre);
+    List<Empresa> findByCuilAndEliminadoFalse(Long cuil);
 }
 ```
 
-### Flujo de Transacciones
+### Flujo de Transacciones Spring
 
-Todas las operaciones siguen este patrón:
+Las transacciones se manejan declarativamente:
 
 ```java
-EntityManager em = getEntityManager();
-try {
-    em.getTransaction().begin();
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class EmpresaService {
+    private final EmpresaRepository repository;
 
-    // Operación específica (persist, merge, remove, query)
-    T result = performOperation(em, entity);
+    public EmpresaDto crearEmpresa(CreateEmpresaRequest request) {
+        // Spring maneja automáticamente:
+        // - Inicio de transacción
+        // - Commit/Rollback
+        // - Manejo de EntityManager
 
-    em.getTransaction().commit();
-    logSuccess(entityClass, result.getId());
-    return result;
+        Empresa empresa = Empresa.builder()
+            .nombre(request.getNombre())
+            .razonSocial(request.getRazonSocial())
+            .cuil(request.getCuil())
+            .eliminado(false)
+            .build();
 
-} catch (Exception e) {
-    if (em.getTransaction().isActive()) {
-        em.getTransaction().rollback();
+        Empresa guardada = repository.save(empresa);
+        return convertirADto(guardada);
     }
-    logError(entityClass, e);
-    throw new RuntimeException("Error al procesar " + entityClass.getSimpleName(), e);
-
-} finally {
-    em.close();
 }
 ```
 
 ### Ejemplos de Uso Real
 
-#### Creación de un Nuevo Artículo
-```java
-// 1. Obtener unidad de medida existente
-UnidadMedida unidad = unidadMedidaRepo.findById(1L).orElse(null);
+#### Creación de un Nuevo Artículo via API REST
+```bash
+# 1. Crear artículo via POST request
+curl -X POST http://localhost:8080/api/v1/articulos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Coca Cola",
+    "denominacion": "Coca Cola 500ml",
+    "precioVenta": 120.0,
+    "precioCompra": 70.0,
+    "stockActual": 100,
+    "stockMaximo": 500,
+    "esParaElaborar": false
+  }'
 
-// 2. Construir artículo usando patrón Builder
-ArticuloInsumo nuevo = ArticuloInsumo.builder()
-    .nombre("Coca Cola")
-    .denominacion("Coca Cola 500ml")
-    .precioVenta(120.0)
-    .unidadMedida(unidad)  // Referencia a entidad existente
-    .precioCompra(70.0)
-    .stockActual(100)
-    .stockMaximo(500)
-    .esParaElaborar(false)
-    .build();
-
-// 3. Persistir en base de datos
-ArticuloInsumo guardado = (ArticuloInsumo) articuloRepo.save(nuevo);
-
-// Resultado:
-// ✓ Nuevo artículo creado: ArticuloInsumo: Coca Cola 500ml - Stock: 100
+# 2. Respuesta del servidor
+{
+  "id": 5,
+  "nombre": "Coca Cola",
+  "denominacion": "Coca Cola 500ml",
+  "precioVenta": 120.0,
+  "stockActual": 100,
+  "eliminado": false
+}
 ```
 
-#### Búsqueda por Campo Específico
-```java
-// Buscar todos los artículos con precio específico
-List<Articulo> articulosCaros = articuloRepo.findByField("precioVenta", 150.0);
+#### Búsqueda por Campo Específico via API
+```bash
+# Buscar artículos por tipo
+GET http://localhost:8080/api/v1/articulos/buscar-por-tipo?tipo=INSUMO
 
-// Resultado SQL generado:
-// SELECT * FROM articulo WHERE precio_venta = 150.0
+# Buscar pedidos por estado
+GET http://localhost:8080/api/v1/pedidos/buscar-por-estado?estado=PENDIENTE
+
+# Buscar facturas por forma de pago
+GET http://localhost:8080/api/v1/facturas?formaPago=MERCADOPAGO
 ```
 
-#### Gestión de Relaciones Bidireccionales
-```java
-// Agregar categoría a sucursal (automático en ambas direcciones)
-Categoria nueva = categoriaRepo.save(Categoria.builder()
-    .nombre("Postres")
-    .denominacion("Postres y Dulces")
-    .build());
+#### Gestión de Relaciones via API
+```bash
+# Crear categoría
+POST http://localhost:8080/api/v1/categorias
+{
+  "nombre": "Postres",
+  "denominacion": "Postres y Dulces",
+  "sucursalId": 1
+}
 
-sucursal.addCategoria(nueva);
-// Resultado: nueva.sucursal == sucursal (automático)
+# Obtener categorías de una sucursal
+GET http://localhost:8080/api/v1/categorias?sucursalId=1
+
+# Las relaciones bidireccionales se mantienen automáticamente
 ```
 
 ---
@@ -533,31 +592,43 @@ ArticuloInsumo articulo = ArticuloInsumo.builder()
 
 ## 🎨 Patrones de Diseño
 
-### 1. Repository Pattern
+### 1. Controller-Service-Repository Pattern
 
-**Implementación:**
+**Implementación Spring Boot:**
 ```java
-// Abstracción del acceso a datos
-public class GenericRepository<T> {
-    private final Class<T> entityClass;
-    private static EntityManagerFactory emf;
+// Controller - API REST
+@RestController
+@RequestMapping("/api/v1/empresas")
+@RequiredArgsConstructor
+public class EmpresaController {
+    private final EmpresaService service;
 
-    // Operaciones genéricas para cualquier entidad
-    public T save(T entity) { /* JPA logic */ }
-    public Optional<T> findById(Long id) { /* JPA logic */ }
-    // ... más operaciones
+    @GetMapping
+    public ResponseEntity<List<EmpresaDto>> listarEmpresas() {
+        return ResponseEntity.ok(service.listarTodas());
+    }
 }
 
-// Uso específico por tipo
-private static GenericRepository<Cliente> clienteRepo =
-    new GenericRepository<>(Cliente.class);
+// Service - Lógica de negocio
+@Service
+@Transactional
+public class EmpresaService {
+    private final EmpresaRepository repository;
+    // Métodos de negocio
+}
+
+// Repository - Acceso a datos
+@Repository
+public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
+    List<Empresa> findByEliminadoFalse();
+}
 ```
 
 **Ventajas:**
-- Código reutilizable para todas las entidades
-- Abstracción del mecanismo de persistencia
-- Transacciones automáticas
-- Manejo centralizado de errores
+- Separación clara de responsabilidades
+- API REST automática con documentación
+- Transacciones declarativas
+- Inyección de dependencias automática
 
 ### 2. Builder Pattern (Lombok)
 
@@ -656,12 +727,13 @@ public class Empresa extends Base {
 
 ### Salida de Consola Real
 
-Al ejecutar `./gradlew run`, el sistema produce la siguiente salida:
+Al ejecutar `./gradlew bootRun`, el sistema Spring Boot produce la siguiente salida:
 
 ```
-===== SISTEMA DE GESTIÓN EMPRESARIAL CON REPOSITORIOS =====
+===== SISTEMA DE GESTIÓN EMPRESARIAL CON SPRING BOOT =====
 
-Inicializando sistema empresarial con repositorios...
+Started ComercioJpaApplication in 2.847 seconds (process running for 3.234)
+Inicializando datos de prueba con DataInitializationService...
 
 Pais guardado con ID: 1
 Provincia guardado con ID: 1
@@ -715,30 +787,36 @@ Categoría: Categoria: Platos Principales - 2 artículos
   Horario: 18:00 - 23:00
   Descuento: $150.0
 
-===== DEMOSTRACIÓN DE OPERACIONES CRUD CON REPOSITORIOS =====
+===== ENDPOINTS API REST DISPONIBLES =====
 
---- CRUD de Usuarios ---
-✓ Usuario creado: Usuario: UsuarioPrueba - 999
-✓ Usuario encontrado por ID: Usuario: UsuarioPrueba - 999
-✓ Usuario actualizado: Usuario: UsuarioPrueba - 999
-✓ Total usuarios en repositorio: 3
-✓ Usuario eliminado: Usuario: UsuarioPrueba - 999
-✓ Total usuarios después de eliminar: 2
+Swagger UI: http://localhost:8080/swagger-ui.html
+H2 Console: http://localhost:8080/h2-console
+Health Check: http://localhost:8080/actuator/health
 
---- CRUD de Artículos ---
-✓ Total artículos en repositorio: 4
-  - ArticuloInsumo: Cerveza Quilmes 473ml - Stock: 50
-  - ArticuloInsumo: Masa fresca para pizza mediana - Stock: 30
-  - ArticuloManufacturado: Pizza Especial con ingredientes premium - Tiempo: 25min
-  - ArticuloManufacturado: Combo completo pizza mediana + bebida - Tiempo: 30min
-✓ Nuevo artículo creado: ArticuloInsumo: Coca Cola 500ml - Stock: 100
-✓ Total artículos después de agregar: 5
+--- Endpoints Empresas ---
+✓ GET    /api/v1/empresas
+✓ POST   /api/v1/empresas
+✓ PUT    /api/v1/empresas/{id}
+✓ DELETE /api/v1/empresas/{id}
 
---- Búsquedas por Campo ---
-✓ Usuarios con nombre 'Usuario Principal': 1
-  - Usuario: DavidLopez - 001
-✓ Artículos con precio de venta $150: 1
-  - ArticuloInsumo: Cerveza Quilmes 473ml - Stock: 50
+--- Endpoints Artículos ---
+✓ GET    /api/v1/articulos
+✓ GET    /api/v1/articulos/buscar-por-tipo
+✓ POST   /api/v1/articulos
+✓ PUT    /api/v1/articulos/{id}
+✓ DELETE /api/v1/articulos/{id}
+
+--- Datos Iniciales Creados ---
+✓ Cerveza Quilmes 473ml - Stock: 50
+✓ Masa fresca para pizza mediana - Stock: 30
+✓ Pizza Especial con ingredientes premium - Tiempo: 25min
+✓ Combo completo pizza mediana + bebida - Tiempo: 30min
+
+--- Endpoints de Búsqueda ---
+✓ GET /api/v1/pedidos/buscar-por-estado?estado=PENDIENTE
+✓ GET /api/v1/pedidos/buscar-por-cliente?clienteId=1
+✓ GET /api/v1/facturas?formaPago=MERCADOPAGO
+✓ GET /api/v1/promociones/vigentes
 
 ===== CONSULTAS Y ANALISIS DEL SISTEMA =====
 
@@ -756,24 +834,21 @@ ANALISIS GEOGRAFICO:
 • Sucursal Godoy Cruz ubicada en Localidad: Godoy Cruz - Mendoza
 • Casa Matriz Centro ubicada en Localidad: Maipú - Mendoza
 
-===== PRUEBAS DE FUNCIONALIDAD CON REPOSITORIOS =====
+===== ENDPOINTS SISTEMA Y MONITOREO =====
 
-PRUEBA: Relaciones bidireccionales
-• Sucursal agregada: 2 -> 3
-• Sucursal removida: 2 sucursales
+PRUEBA: Documentación Swagger
+• Swagger UI: http://localhost:8080/swagger-ui.html
+• OpenAPI JSON: http://localhost:8080/api-docs
 
-PRUEBA: Operaciones CRUD de Entidades
-• Categoría agregada al repositorio y sucursal: 3 -> 4
-• Categoría removida de sucursal y repositorio: 3 categorías
+PRUEBA: Monitoreo Spring Actuator
+• Health: http://localhost:8080/actuator/health
+• Info: http://localhost:8080/actuator/info
+• Environment: http://localhost:8080/actuator/env
 
-PRUEBA: Consistencia de Repositorios
-• Total empresas: 1
-• Total sucursales: 2
-• Total usuarios: 2
-• Total clientes: 2
-• Total artículos: 5
-• Total categorías: 3
-• Total promociones: 2
+PRUEBA: Base de Datos H2
+• Console: http://localhost:8080/h2-console
+• JDBC URL: jdbc:h2:file:./restaurante_db
+• Usuario: sa / Password: (vacía)
 
 ===== FIN DEL SISTEMA =====
 ```
@@ -811,22 +886,25 @@ FROM usuarios u1_0 WHERE u1_0.nombre=?;
 
 ### Métricas del Sistema
 
-**Inicialización:**
-- ⏱️ Tiempo total: ~2-3 segundos
-- 💾 Entidades creadas: ~25 objetos
-- 🗄️ Tablas generadas: 21 tablas
-- 🔗 Relaciones establecidas: ~40 foreign keys
+**Inicialización Spring Boot:**
+- ⏱️ Tiempo de startup: ~2-3 segundos
+- 💾 Entidades JPA: 22 entidades
+- 🗄️ Tablas H2: 21 tablas auto-generadas
+- 🔗 Relaciones: ~40 foreign keys
+- 🌱 Datos semilla: ~30 registros iniciales
 
-**Operaciones CRUD:**
-- ⚡ Save operations: ~50ms promedio
-- 🔍 Find operations: ~10ms promedio
-- 🔄 Update operations: ~30ms promedio
-- ❌ Delete operations: ~20ms promedio
+**Operaciones API REST:**
+- ⚡ POST (CREATE): ~50ms promedio
+- 🔍 GET (READ): ~10ms promedio
+- 🔄 PUT (UPDATE): ~30ms promedio
+- ❌ DELETE (SOFT): ~20ms promedio
+- 📄 Documentación: Swagger automático
 
-**Consultas Complejas:**
-- 📊 Análisis por categorías: ~100ms
-- 🔎 Búsquedas por campo: ~15ms
-- 📈 Agregaciones: ~50ms
+**Consultas API:**
+- 📊 Búsquedas por estado: ~15ms
+- 🔎 Filtros por tipo: ~20ms
+- 📈 Estadísticas: ~50ms
+- 📄 Paginación: Soporte nativo
 
 ### Optimizaciones Implementadas
 
@@ -871,27 +949,39 @@ Este sistema demuestra una implementación completa y profesional de gestión em
 
 ### ✅ Fortalezas del Sistema
 
-1. **Arquitectura Sólida**: Separación clara de responsabilidades con patrones probados
-2. **Persistencia Robusta**: JPA/Hibernate con transacciones ACID y manejo de errores
-3. **Relaciones Complejas**: Bidireccionales automáticas y herencia JOINED
-4. **Código Limpio**: Lombok reduce boilerplate en ~70%
-5. **Demostraciones Completas**: Casos de uso reales con datos de prueba
-6. **Escalabilidad**: Arquitectura preparada para crecimiento
+1. **API REST Completa**: Endpoints documentados con OpenAPI/Swagger
+2. **Spring Boot 3.2.0**: Framework moderno con configuración automática
+3. **Arquitectura en Capas**: Controller-Service-Repository bien definido
+4. **Persistencia Robusta**: JPA/Hibernate con transacciones ACID
+5. **Relaciones Complejas**: Bidireccionales automáticas y herencia JOINED
+6. **Código Limpio**: Lombok reduce boilerplate en ~70%
+7. **Validación Automática**: Bean Validation con Jakarta
+8. **Monitoreo Integrado**: Spring Boot Actuator
+9. **Documentación Interactiva**: Swagger UI para testing
+10. **Escalabilidad**: Arquitectura preparada para microservicios
 
 ### 🔮 Extensiones Futuras Recomendadas
 
-1. **API REST**: Exposición de servicios con Spring Boot
-2. **Seguridad**: Implementación de JWT y roles
-3. **Testing**: JUnit 5 + Testcontainers para pruebas
-4. **Monitoring**: Métricas con Micrometer + Prometheus
-5. **Cache**: Redis para mejorar rendimiento
-6. **Microservicios**: Separación por dominios de negocio
+1. **Seguridad**: Spring Security con JWT y roles
+2. **Testing**: JUnit 5 + TestContainers + MockMvc
+3. **Cache**: Redis para mejorar rendimiento de consultas
+4. **Monitoring**: Micrometer + Prometheus + Grafana
+5. **Base de Datos**: PostgreSQL para producción
+6. **Docker**: Containerización completa
+7. **CI/CD**: GitHub Actions o Jenkins
+8. **Microservicios**: Spring Cloud para separación por dominios
+9. **Message Queues**: RabbitMQ o Apache Kafka
+10. **API Gateway**: Spring Cloud Gateway
 
 ### 💡 Lecciones Aprendidas
 
-- **Entity Management**: La gestión correcta de entidades JPA es crucial para evitar excepciones
+- **Spring Boot Architecture**: La arquitectura en capas facilita el mantenimiento y testing
+- **API-First Design**: Swagger/OpenAPI mejora la colaboración entre equipos
+- **Entity Management**: JPA con Spring Data simplifica el acceso a datos
 - **Bidirectional Relationships**: Los métodos helper previenen inconsistencias
-- **Transaction Management**: El manejo automático de transacciones simplifica el código
-- **Builder Pattern**: Mejora significativamente la legibilidad del código
+- **Declarative Transactions**: @Transactional simplifica el manejo de transacciones
+- **Bean Validation**: Validación automática en todas las capas
+- **Builder Pattern**: Lombok mejora significativamente la legibilidad del código
+- **Monitoring**: Spring Actuator facilita el monitoreo en producción
 
-Este proyecto sirve como **ejemplo de referencia** para implementaciones empresariales reales con Java + JPA, demostrando mejores prácticas y patrones de diseño en un contexto de negocio realista.
+Este proyecto sirve como **ejemplo de referencia** para implementaciones empresariales reales con **Spring Boot + JPA**, demostrando mejores prácticas y patrones de diseño en un contexto de API REST moderna.

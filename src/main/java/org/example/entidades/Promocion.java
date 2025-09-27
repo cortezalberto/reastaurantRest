@@ -56,6 +56,10 @@ public class Promocion extends Base {
     @Builder.Default
     private Set<Articulo> articulos = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sucursal_id")
+    private Sucursal sucursal;
+
     public void addImagen(Imagen imagen) {
         imagenes.add(imagen);
     }

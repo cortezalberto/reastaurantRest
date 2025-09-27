@@ -1,6 +1,7 @@
 package org.example.repository;
 
 import org.example.entidades.Promocion;
+import org.example.entidades.TipoPromocion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,4 +26,14 @@ public interface PromocionRepository extends JpaRepository<Promocion, Long> {
 
     @Query("SELECT p FROM Promocion p WHERE p.horaDesde <= :hora AND p.horaHasta >= :hora AND p.eliminado = false")
     List<Promocion> findPromocionesPorHora(@Param("hora") LocalTime hora);
+
+    /**
+     * Buscar promociones por tipo y que no estén eliminadas
+     */
+    List<Promocion> findByTipoPromocionAndEliminadoFalse(TipoPromocion tipoPromocion);
+
+    /**
+     * Buscar promociones por sucursal y que no estén eliminadas
+     */
+    List<Promocion> findBySucursalIdAndEliminadoFalse(Long sucursalId);
 }

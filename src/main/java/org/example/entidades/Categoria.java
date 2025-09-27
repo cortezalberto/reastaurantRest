@@ -32,6 +32,10 @@ public class Categoria extends Base {
     @JoinColumn(name = "categoria_padre_id")
     private Categoria categoriaPadre;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sucursal_id")
+    private Sucursal sucursal;
+
     public void addArticulo(Articulo articulo) {
         articulos.add(articulo);
         articulo.setCategoria(this);

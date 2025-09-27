@@ -22,5 +22,5 @@ public class CreateEmpresaRequest {
     private String razonSocial;
 
     @NotNull(message = "El CUIL es obligatorio")
-    private Integer cuil;
+    private Long cuil;
 }

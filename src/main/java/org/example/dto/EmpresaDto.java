@@ -15,7 +15,7 @@ public class EmpresaDto {
     private Long id;
     private String nombre;
     private String razonSocial;
-    private Integer cuil;
+    private Long cuil;
     private boolean eliminado;
     private List<SucursalDto> sucursales;
     private int cantidadSucursales;

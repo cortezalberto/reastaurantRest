@@ -1,6 +1,8 @@
 package org.example.entidades;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -17,6 +19,8 @@ public abstract class Base {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(min = 1, max = 255, message = "El nombre debe tener entre 1 y 255 caracteres")
     @Column(nullable = false)
     private String nombre;
 

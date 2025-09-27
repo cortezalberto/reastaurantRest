@@ -1,6 +1,8 @@
 package org.example.entidades;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -17,11 +19,14 @@ import java.util.Set;
 @ToString(callSuper = true, exclude = {"sucursales"})
 public class Empresa extends Base {
 
-    @Column(name = "razon_social")
+    @NotNull
+    @Size(min = 1, max = 255)
+    @Column(name = "razon_social", nullable = false)
     private String razonSocial;
 
-    @Column(name = "cuil")
-    private Integer cuil;
+    @NotNull
+    @Column(name = "cuil", nullable = false, unique = true)
+    private Long cuil;
 
     @OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default

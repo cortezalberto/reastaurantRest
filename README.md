@@ -9,11 +9,14 @@ Una API REST completa desarrollada con Spring Boot 3.2.0 para la gestión integr
 - **API REST Completa** con documentación OpenAPI/Swagger
 - **Base de datos H2** embebida con persistencia en archivo
 - **Arquitectura en capas** siguiendo patrón Controller-Service-Repository
-- **Validación automática** de datos con Bean Validation
+- **Validación automática** de datos con Bean Validation mejorada
 - **Manejo de errores** centralizado y consistente
 - **Monitoreo** con Spring Boot Actuator
 - **Soft Delete** para mantener integridad histórica
 - **Seeding automático** de datos de prueba
+- **Índices optimizados** para consultas de alto rendimiento
+- **Tipos de datos corregidos** para mayor precisión (CUIL Long)
+- **Validaciones robustas** en todas las capas
 
 ## 📋 Requisitos
 
@@ -39,10 +42,11 @@ gradlew.bat bootRun
 ```
 
 ### 3. Verificar la instalación
-- **API Base**: http://localhost:8080/api/
+- **API Base**: http://localhost:8080/api/v1/
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 - **H2 Console**: http://localhost:8080/h2-console
 - **Health Check**: http://localhost:8080/actuator/health
+- **API Docs**: http://localhost:8080/api-docs
 
 ## 🏗️ Arquitectura del Sistema
 
@@ -86,10 +90,10 @@ Empresa → Sucursal → Categoria
                  → Articulo (Insumo/Manufacturado)
 ```
 
-### Gestión de Usuarios
+### Gestión de Usuarios y Pedidos
 ```
 Usuario → Cliente → Domicilio (many-to-many)
-       → Pedido → DetallePedido
+       → Pedido → DetallePedido → Factura
 ```
 
 ### Catálogo de Productos
@@ -105,26 +109,78 @@ Articulo (Abstract)
 ### Empresas
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| GET | `/api/empresas` | Listar todas las empresas |
-| GET | `/api/empresas/{id}` | Obtener empresa por ID |
-| POST | `/api/empresas` | Crear nueva empresa |
-| PUT | `/api/empresas/{id}` | Actualizar empresa |
-| DELETE | `/api/empresas/{id}` | Eliminar empresa (soft delete) |
+| GET | `/api/v1/empresas` | Listar todas las empresas |
+| GET | `/api/v1/empresas/{id}` | Obtener empresa por ID |
+| POST | `/api/v1/empresas` | Crear nueva empresa |
+| PUT | `/api/v1/empresas/{id}` | Actualizar empresa |
+| DELETE | `/api/v1/empresas/{id}` | Eliminar empresa (soft delete) |
 
 ### Clientes
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| GET | `/api/clientes` | Listar todos los clientes |
-| GET | `/api/clientes/{id}` | Obtener cliente por ID |
-| POST | `/api/clientes` | Crear nuevo cliente |
-| PUT | `/api/clientes/{id}` | Actualizar cliente |
-| DELETE | `/api/clientes/{id}` | Eliminar cliente (soft delete) |
+| GET | `/api/v1/clientes` | Listar todos los clientes |
+| GET | `/api/v1/clientes/{id}` | Obtener cliente por ID |
+| POST | `/api/v1/clientes` | Crear nuevo cliente |
+| PUT | `/api/v1/clientes/{id}` | Actualizar cliente |
+| DELETE | `/api/v1/clientes/{id}` | Eliminar cliente (soft delete) |
+
+### Productos (Artículos)
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/v1/articulos` | Listar todos los productos |
+| GET | `/api/v1/articulos/{id}` | Obtener producto por ID |
+| POST | `/api/v1/articulos` | Crear nuevo producto |
+| PUT | `/api/v1/articulos/{id}` | Actualizar producto |
+| DELETE | `/api/v1/articulos/{id}` | Eliminar producto (soft delete) |
+| GET | `/api/v1/articulos/buscar-por-tipo` | Buscar por tipo (INSUMO/MANUFACTURADO) |
+
+### Categorías
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/v1/categorias` | Listar todas las categorías |
+| GET | `/api/v1/categorias/{id}` | Obtener categoría por ID |
+| POST | `/api/v1/categorias` | Crear nueva categoría |
+| PUT | `/api/v1/categorias/{id}` | Actualizar categoría |
+| DELETE | `/api/v1/categorias/{id}` | Eliminar categoría (soft delete) |
+| GET | `/api/v1/categorias/principales` | Obtener categorías raíz |
+
+### Promociones
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/v1/promociones` | Listar todas las promociones |
+| GET | `/api/v1/promociones/{id}` | Obtener promoción por ID |
+| POST | `/api/v1/promociones` | Crear nueva promoción |
+| PUT | `/api/v1/promociones/{id}` | Actualizar promoción |
+| DELETE | `/api/v1/promociones/{id}` | Eliminar promoción (soft delete) |
+| GET | `/api/v1/promociones/vigentes` | Obtener promociones activas |
+
+### Sucursales
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/v1/sucursales` | Listar todas las sucursales |
+| GET | `/api/v1/sucursales/{id}` | Obtener sucursal por ID |
+| GET | `/api/v1/sucursales/abiertas` | Obtener sucursales actualmente abiertas |
+
+### Pedidos
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/v1/pedidos` | Listar todos los pedidos |
+| GET | `/api/v1/pedidos/{id}` | Obtener pedido por ID |
+| GET | `/api/v1/pedidos/buscar-por-cliente` | Buscar pedidos por cliente |
+| GET | `/api/v1/pedidos/buscar-por-estado` | Buscar pedidos por estado |
+
+### Facturas
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/v1/facturas` | Listar todas las facturas |
+| GET | `/api/v1/facturas/{id}` | Obtener factura por ID |
+| GET | `/api/v1/facturas/estadisticas` | Obtener estadísticas de facturación |
 
 ### Sistema
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
 | GET | `/actuator/health` | Estado de salud de la aplicación |
-| GET | `/api/health` | Health check personalizado |
+| GET | `/api/v1/health` | Health check personalizado |
 | GET | `/swagger-ui.html` | Documentación interactiva |
 | GET | `/h2-console` | Consola de base de datos H2 |
 
@@ -159,12 +215,18 @@ La aplicación incluye un servicio de inicialización automática que crea datos
   - Sucursal Norte (Godoy Cruz)
 
 ### Catálogo de Productos
-- **Insumos**: Cerveza, Masa de pizza, Queso mozzarella
-- **Manufacturados**: Pizza Margherita, Combo Cerveza
+- **Insumos**: Cerveza Quilmes 473ml, Masa fresca para pizza mediana
+- **Manufacturados**: Pizza Especial con ingredientes premium, Combo completo pizza + bebida
 
 ### Clientes de Prueba
-- Clientes con usuarios y domicilios asociados
-- Estructura completa para testing
+- **David López**: Cliente con domicilio en Maipú
+- **Tomás Ferro**: Cliente con domicilio en Godoy Cruz
+- Estructura completa con usuarios, domicilios y relaciones
+
+### Pedidos y Facturas
+- **5 Pedidos de Prueba**: Con diferentes estados (ENTREGADO, PREPARACION, PENDIENTE, CANCELADO)
+- **Facturación Automática**: Facturas generadas para pedidos entregados
+- **Formas de Pago**: EFECTIVO, MERCADO_PAGO con simulación de datos
 
 ## 🎯 Comandos de Desarrollo
 
@@ -231,7 +293,7 @@ Acceder a http://localhost:8080/swagger-ui.html para:
 
 #### Crear Empresa
 ```json
-POST /api/empresas
+POST /api/v1/empresas
 {
   "nombre": "Nueva Empresa",
   "razonSocial": "Nueva Empresa S.A.",
@@ -241,13 +303,28 @@ POST /api/empresas
 
 #### Crear Cliente
 ```json
-POST /api/clientes
+POST /api/v1/clientes
 {
   "nombre": "Juan",
   "apellido": "Pérez",
   "telefono": "261-1234567",
   "email": "juan.perez@email.com"
 }
+```
+
+#### Buscar Pedidos por Estado
+```bash
+GET /api/v1/pedidos/buscar-por-estado?estado=PENDIENTE
+```
+
+#### Buscar Promociones Vigentes
+```bash
+GET /api/v1/promociones/vigentes
+```
+
+#### Obtener Estadísticas de Facturación
+```bash
+GET /api/v1/facturas/estadisticas
 ```
 
 ## 🧪 Testing
@@ -311,29 +388,57 @@ rm restaurante_db.mv.db
 
 ```
 src/main/java/org/example/
-├── ComercioJpaApplication.java          # Punto de entrada
+├── ComercioJpaApplication.java          # Punto de entrada Spring Boot
 ├── controller/                          # Controladores REST
 │   ├── EmpresaController.java
 │   ├── ClienteController.java
+│   ├── ArticuloController.java
+│   ├── CategoriaController.java
+│   ├── PromocionController.java
+│   ├── SucursalController.java
+│   ├── PedidoController.java
+│   ├── FacturaController.java
 │   ├── HealthController.java
 │   └── GlobalExceptionHandler.java
 ├── service/                             # Lógica de negocio
 │   ├── EmpresaService.java
 │   ├── ClienteService.java
+│   ├── ArticuloService.java
+│   ├── CategoriaService.java
+│   ├── PromocionService.java
+│   ├── PedidoService.java
+│   ├── FacturaService.java
 │   └── DataInitializationService.java
 ├── repository/                          # Acceso a datos
 │   ├── EmpresaRepository.java
 │   ├── ClienteRepository.java
-│   └── ... (13 repositorios más)
+│   ├── ArticuloRepository.java
+│   ├── CategoriaRepository.java
+│   ├── PromocionRepository.java
+│   ├── PedidoRepository.java
+│   ├── FacturaRepository.java
+│   └── ... (8 repositorios más)
 ├── entidades/                           # Modelo de dominio
 │   ├── Base.java                       # Entidad base
 │   ├── Empresa.java
 │   ├── Cliente.java
-│   └── ... (22 entidades más)
+│   ├── Articulo.java                   # Jerarquía JOINED
+│   ├── ArticuloInsumo.java
+│   ├── ArticuloManufacturado.java
+│   ├── Categoria.java
+│   ├── Promocion.java
+│   ├── Pedido.java
+│   ├── Factura.java
+│   └── ... (12 entidades más)
 └── dto/                                # Data Transfer Objects
     ├── EmpresaDto.java
     ├── ClienteDto.java
-    └── CreateXxxRequest.java
+    ├── CategoriaDto.java
+    ├── PromocionDto.java
+    ├── PedidoDto.java
+    ├── FacturaDto.java
+    ├── SucursalDto.java
+    └── CreateXxxRequest.java (multiple)
 ```
 
 ## 🛡️ Seguridad
@@ -405,8 +510,30 @@ Este proyecto es desarrollado para fines educativos y demostrativos del patrón 
 ---
 
 **Desarrollo por**: TechFood Solutions
-**Versión**: 2.0 (Spring Boot)
+**Versión**: 2.1 (Spring Boot + Refactorización)
 **Última actualización**: 2025
+
+## 🔄 Changelog v2.1 (2025)
+
+### Mejoras Críticas Implementadas
+- **🔧 Tipos de Datos Corregidos**: CUIL actualizado de Integer a Long para soportar números de 11 dígitos
+- **✅ Validaciones Mejoradas**: Agregadas anotaciones Jakarta Validation en entidades base y específicas
+- **📈 Optimización de BD**: Añadidos índices en tabla pedidos para mejorar rendimiento
+- **🏗️ Arquitectura Consistente**: Mantenimiento de patrones Controller-Service-Repository
+- **🛡️ Integridad de Datos**: Constraints nullable y unique aplicados correctamente
+
+### Refactorización de Código
+- **Controller Layer**: 8 controladores REST con documentación OpenAPI completa
+- **Service Layer**: Capa de servicios con lógica de negocio y manejo de transacciones
+- **Repository Layer**: 15 repositorios Spring Data JPA con consultas personalizadas
+- **DTO Layer**: DTOs para request/response con validación Bean Validation
+- **Entity Layer**: 22 entidades JPA con relaciones bidireccionales y herencia JOINED
+- **Data Seeding**: Servicio de inicialización automática con datos de prueba completos
+
+### Verificación de Calidad
+- **✅ Compilación Exitosa**: Todas las dependencias actualizadas correctamente
+- **✅ Consistencia de Tipos**: Sin errores de casting o conversión
+- **✅ Documentación Actualizada**: User stories y ejemplos con tipos correctos
 
 ## 📞 Soporte
 

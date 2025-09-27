@@ -31,7 +31,7 @@ public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
     /**
      * HU-002: Buscar empresa por CUIL
      */
-    Optional<Empresa> findByCuilAndEliminadoFalse(Integer cuil);
+    Optional<Empresa> findByCuilAndEliminadoFalse(Long cuil);
 
     /**
      * HU-002: Buscar empresas por razón social (contiene texto)
@@ -48,5 +48,5 @@ public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
      * Consulta personalizada: Verificar si existe empresa con CUIL (para validaciones)
      */
     @Query("SELECT COUNT(e) > 0 FROM Empresa e WHERE e.cuil = :cuil AND e.eliminado = false AND (:id IS NULL OR e.id != :id)")
-    boolean existsByCuilAndNotId(@Param("cuil") Integer cuil, @Param("id") Long id);
+    boolean existsByCuilAndNotId(@Param("cuil") Long cuil, @Param("id") Long id);
 }

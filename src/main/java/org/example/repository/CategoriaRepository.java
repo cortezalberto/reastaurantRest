@@ -54,4 +54,9 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
            "ORDER BY c.nombre")
     List<Categoria> findCategoriasRootWithSubcategorias();
 
+    /**
+     * Buscar categorías por sucursal y que no estén eliminadas
+     */
+    List<Categoria> findBySucursalIdAndEliminadoFalse(Long sucursalId);
+
 }

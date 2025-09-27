@@ -36,6 +36,8 @@ public class DataInitializationService implements CommandLineRunner {
     private final LocalidadRepository localidadRepository;
     private final DomicilioRepository domicilioRepository;
     private final PromocionRepository promocionRepository;
+    private final PedidoRepository pedidoRepository;
+    private final FacturaRepository facturaRepository;
 
     @Override
     @Transactional
@@ -76,10 +78,17 @@ public class DataInitializationService implements CommandLineRunner {
         var empresa = crearEmpresaYSucursales(datosGeograficos.domicilios, categorias, promociones);
 
         log.info("Creando clientes...");
-        crearClientes(datosGeograficos, configuracionBase);
+        var clientes = crearClientes(datosGeograficos, configuracionBase);
 
-        log.info("Inicialización completada. Empresa '{}' creada con {} sucursales",
-                empresa.getNombre(), empresa.getSucursales().size());
+        log.info("Creando pedidos...");
+        var pedidos = crearPedidos(clientes, empresa.getSucursales().stream().toList(),
+                                  productos.articulosManufacturados, datosGeograficos.domicilios);
+
+        log.info("Creando facturas...");
+        crearFacturas(pedidos);
+
+        log.info("Inicialización completada. Empresa '{}' creada con {} sucursales, {} clientes, {} pedidos",
+                empresa.getNombre(), empresa.getSucursales().size(), clientes.size(), pedidos.size());
     }
 
     // ===== MÉTODOS DE CREACIÓN DE DATOS =====
@@ -333,7 +342,7 @@ public class DataInitializationService implements CommandLineRunner {
         Empresa empresa = Empresa.builder()
                 .nombre("TechFood Solutions")
                 .razonSocial("TechFood Solutions S.A.")
-                .cuil(2035620636)
+                .cuil(20356206360L)
                 .build();
 
         empresa = empresaRepository.save(empresa);
@@ -371,7 +380,7 @@ public class DataInitializationService implements CommandLineRunner {
         return empresaRepository.save(empresa);
     }
 
-    private void crearClientes(DatosGeograficos geograficos, ConfiguracionBase configuracion) {
+    private java.util.List<Cliente> crearClientes(DatosGeograficos geograficos, ConfiguracionBase configuracion) {
         Cliente cliente1 = Cliente.builder()
                 .nombre("David")
                 .apellido("López")
@@ -395,8 +404,10 @@ public class DataInitializationService implements CommandLineRunner {
         cliente1.addDomicilio(geograficos.domicilios.get(0));
         cliente2.addDomicilio(geograficos.domicilios.get(1));
 
-        clienteRepository.save(cliente1);
-        clienteRepository.save(cliente2);
+        cliente1 = clienteRepository.save(cliente1);
+        cliente2 = clienteRepository.save(cliente2);
+
+        return java.util.List.of(cliente1, cliente2);
     }
 
     // ===== CLASES AUXILIARES =====
@@ -413,4 +424,179 @@ public class DataInitializationService implements CommandLineRunner {
             java.util.List<ArticuloInsumo> articulosInsumo,
             java.util.List<ArticuloManufacturado> articulosManufacturados
     ) {}
+
+    private java.util.List<Pedido> crearPedidos(java.util.List<Cliente> clientes,
+                                               java.util.List<Sucursal> sucursales,
+                                               java.util.List<ArticuloManufacturado> articulos,
+                                               java.util.List<Domicilio> domicilios) {
+        java.util.List<Pedido> pedidos = new java.util.ArrayList<>();
+
+        // Pedido 1: Cliente David - Pizza Especial - ENTREGADO - EFECTIVO
+        Pedido pedido1 = Pedido.builder()
+                .nombre("Pedido #001")
+                .fechaPedido(LocalDate.now().minusDays(5))
+                .horaEstimadaFinalizacion(LocalTime.of(20, 30))
+                .total(850.0)
+                .totalCosto(400.0)
+                .estado(Estado.ENTREGADO)
+                .tipoDeEnvio(TipoDeEnvio.DELIVERY)
+                .formaPago(FormaPago.EFECTIVO)
+                .cliente(clientes.get(0))
+                .sucursal(sucursales.get(0))
+                .domicilio(domicilios.get(0))
+                .build();
+
+        DetallePedido detalle1 = DetallePedido.builder()
+                .nombre("Pizza Especial x1")
+                .cantidad(1)
+                .subTotal(850.0)
+                .articulo(articulos.get(0))
+                .build();
+
+        pedido1.addDetallePedido(detalle1);
+        pedido1 = pedidoRepository.save(pedido1);
+        pedidos.add(pedido1);
+
+        // Pedido 2: Cliente Tomás - Combo Pizza + Bebida - PREPARACION - MERCADOPAGO
+        Pedido pedido2 = Pedido.builder()
+                .nombre("Pedido #002")
+                .fechaPedido(LocalDate.now().minusDays(2))
+                .horaEstimadaFinalizacion(LocalTime.of(21, 0))
+                .total(950.0)
+                .totalCosto(450.0)
+                .estado(Estado.PREPARACION)
+                .tipoDeEnvio(TipoDeEnvio.TAKEAWAY)
+                .formaPago(FormaPago.MERCADOPAGO)
+                .cliente(clientes.get(1))
+                .sucursal(sucursales.get(1))
+                .build();
+
+        DetallePedido detalle2 = DetallePedido.builder()
+                .nombre("Combo Pizza + Bebida x1")
+                .cantidad(1)
+                .subTotal(950.0)
+                .articulo(articulos.get(1))
+                .build();
+
+        pedido2.addDetallePedido(detalle2);
+        pedido2 = pedidoRepository.save(pedido2);
+        pedidos.add(pedido2);
+
+        // Pedido 3: Cliente David - Múltiples productos - PENDIENTE - EFECTIVO
+        Pedido pedido3 = Pedido.builder()
+                .nombre("Pedido #003")
+                .fechaPedido(LocalDate.now().minusDays(1))
+                .horaEstimadaFinalizacion(LocalTime.of(19, 45))
+                .total(1800.0)
+                .totalCosto(850.0)
+                .estado(Estado.PENDIENTE)
+                .tipoDeEnvio(TipoDeEnvio.DELIVERY)
+                .formaPago(FormaPago.EFECTIVO)
+                .cliente(clientes.get(0))
+                .sucursal(sucursales.get(0))
+                .domicilio(domicilios.get(0))
+                .build();
+
+        DetallePedido detalle3a = DetallePedido.builder()
+                .nombre("Pizza Especial x1")
+                .cantidad(1)
+                .subTotal(850.0)
+                .articulo(articulos.get(0))
+                .build();
+
+        DetallePedido detalle3b = DetallePedido.builder()
+                .nombre("Combo Pizza + Bebida x1")
+                .cantidad(1)
+                .subTotal(950.0)
+                .articulo(articulos.get(1))
+                .build();
+
+        pedido3.addDetallePedido(detalle3a);
+        pedido3.addDetallePedido(detalle3b);
+        pedido3 = pedidoRepository.save(pedido3);
+        pedidos.add(pedido3);
+
+        // Pedido 4: Cliente Tomás - Pizza para llevar - ENTREGADO - MERCADOPAGO
+        Pedido pedido4 = Pedido.builder()
+                .nombre("Pedido #004")
+                .fechaPedido(LocalDate.now())
+                .horaEstimadaFinalizacion(LocalTime.of(22, 15))
+                .total(850.0)
+                .totalCosto(400.0)
+                .estado(Estado.ENTREGADO)
+                .tipoDeEnvio(TipoDeEnvio.TAKEAWAY)
+                .formaPago(FormaPago.MERCADOPAGO)
+                .cliente(clientes.get(1))
+                .sucursal(sucursales.get(1))
+                .build();
+
+        DetallePedido detalle4 = DetallePedido.builder()
+                .nombre("Pizza Especial x1")
+                .cantidad(1)
+                .subTotal(850.0)
+                .articulo(articulos.get(0))
+                .build();
+
+        pedido4.addDetallePedido(detalle4);
+        pedido4 = pedidoRepository.save(pedido4);
+        pedidos.add(pedido4);
+
+        // Pedido 5: Cliente David - Pedido cancelado - CANCELADO - EFECTIVO
+        Pedido pedido5 = Pedido.builder()
+                .nombre("Pedido #005")
+                .fechaPedido(LocalDate.now().minusDays(3))
+                .horaEstimadaFinalizacion(LocalTime.of(20, 0))
+                .total(950.0)
+                .totalCosto(450.0)
+                .estado(Estado.CANCELADO)
+                .tipoDeEnvio(TipoDeEnvio.DELIVERY)
+                .formaPago(FormaPago.EFECTIVO)
+                .cliente(clientes.get(0))
+                .sucursal(sucursales.get(0))
+                .domicilio(domicilios.get(0))
+                .build();
+
+        DetallePedido detalle5 = DetallePedido.builder()
+                .nombre("Combo Pizza + Bebida x1")
+                .cantidad(1)
+                .subTotal(950.0)
+                .articulo(articulos.get(1))
+                .build();
+
+        pedido5.addDetallePedido(detalle5);
+        pedido5 = pedidoRepository.save(pedido5);
+        pedidos.add(pedido5);
+
+        return pedidos;
+    }
+
+    private void crearFacturas(java.util.List<Pedido> pedidos) {
+        // Solo crear facturas para pedidos entregados
+        pedidos.stream()
+                .filter(pedido -> pedido.getEstado() == Estado.ENTREGADO)
+                .forEach(this::crearFacturaParaPedido);
+    }
+
+    private void crearFacturaParaPedido(Pedido pedido) {
+        Factura factura = Factura.builder()
+                .nombre("Factura " + pedido.getNombre())
+                .fechaFacturacion(pedido.getFechaPedido())
+                .totalVenta(pedido.getTotal())
+                .formaPago(pedido.getFormaPago())
+                .build();
+
+        // Configurar datos específicos según forma de pago
+        if (pedido.getFormaPago() == FormaPago.MERCADOPAGO) {
+            factura.setMpPaymentId(123456789);
+            factura.setMpMerchantOrderId("MO-" + System.currentTimeMillis());
+            factura.setMpPreferenceId("PREF-" + System.currentTimeMillis());
+            factura.setMpPaymentType("credit_card");
+        }
+
+        factura = facturaRepository.save(factura);
+
+        // Asociar factura al pedido
+        pedido.setFactura(factura);
+        pedidoRepository.save(pedido);
+    }
 }

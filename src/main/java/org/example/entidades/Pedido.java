@@ -10,7 +10,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "pedidos")
+@Table(name = "pedidos", indexes = {
+    @Index(name = "idx_pedido_fecha", columnList = "fecha_pedido"),
+    @Index(name = "idx_pedido_estado", columnList = "estado"),
+    @Index(name = "idx_pedido_cliente", columnList = "cliente_id")
+})
 @SuperBuilder
 @Getter
 @Setter

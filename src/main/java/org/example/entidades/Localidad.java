@@ -9,9 +9,9 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)   // <- clave para Hibernate
 public class Localidad extends Base {
 
     @ManyToOne(fetch = FetchType.LAZY)
