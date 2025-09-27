@@ -27,6 +27,7 @@ This is a Spring Boot 3.2.0 project using Gradle with H2 database and comprehens
 - **Lombok 1.18.32**: Boilerplate code reduction
 - **OpenAPI 2.2.0**: API documentation (springdoc-openapi-starter-webmvc-ui)
 - **Java 17**: Required version
+- **Gradle 8.14**: Build tool (wrapper included)
 - **JUnit Platform**: Testing framework (Spring Boot Test starter)
 
 ### Database
@@ -37,7 +38,7 @@ This is a Spring Boot 3.2.0 project using Gradle with H2 database and comprehens
 
 ## Project Architecture
 
-This is a complete Spring Boot REST API for restaurant management following Controller-Service-Repository pattern with 9 controllers, 8 services, 15 repositories, and 22 entities.
+This is a complete Spring Boot REST API for restaurant management following Controller-Service-Repository pattern with 9 controllers, 8 services, 15 repositories, and 25 entity files (20 entities + 5 enums).
 
 ### Core Architecture Layers
 
@@ -69,7 +70,7 @@ Spring Data JPA with 15 repository interfaces:
 - **Support**: UsuarioRepository, ImagenRepository, UnidadMedidaRepository
 
 #### 4. Entity Layer (`src/main/java/org/example/entidades/`)
-22 JPA entities with inheritance and relationships:
+25 JPA entity files with inheritance and relationships (20 entities + 5 enums):
 - **Base Entity**: Abstract class with common fields (`id`, `nombre`, `eliminado`)
 - **JPA Annotations**: Standard Jakarta JPA with Hibernate
 - **Lombok Integration**: `@SuperBuilder`, `@Getter`, `@Setter`, `@ToString` with circular reference exclusions
@@ -77,10 +78,17 @@ Spring Data JPA with 15 repository interfaces:
 - **Soft Delete**: Uses `eliminado` boolean flag instead of physical deletion
 
 #### 5. DTO Layer (`src/main/java/org/example/dto/`)
-Data Transfer Objects for API isolation:
+Data Transfer Objects for API isolation (13 total classes):
 - **Response DTOs**: Clean API responses (EmpresaDto, ClienteDto, ArticuloDto, etc.)
 - **Request DTOs**: Input validation (CreateEmpresaRequest, CreateClienteRequest, etc.)
 - **Bean Validation**: Jakarta validation annotations for input validation
+
+### Application Enums (`src/main/java/org/example/entidades/`)
+- **Estado**: PREPARACION, PENDIENTE, CANCELADO, RECHAZADO, ENTREGADO
+- **FormaPago**: EFECTIVO, MERCADOPAGO
+- **TipoPromocion**: HAPPYHOUR, PROMOCION1
+- **Rol**: User role definitions
+- **TipoDeEnvio**: Delivery type options
 
 ### Key Domain Model
 
@@ -216,12 +224,16 @@ factura.setMpPaymentId((int) basePaymentId);
 ## Configuration
 
 ### Application Configuration (`application.yml`)
+- **Application Name**: `comercio-jpa-api`
 - **Database**: H2 file-based with console enabled at `/h2-console`
+  - **H2 Settings**: `DB_CLOSE_ON_EXIT=FALSE`, `AUTO_RECONNECT=TRUE`
 - **JPA**: DDL auto-creation (`create-drop`), SQL logging enabled at DEBUG level
+  - **SQL Logging**: Includes parameter binding with TRACE level
 - **Server**: Port 8080, detailed error responses included
-- **Actuator**: Health, info, env endpoints exposed
+- **Actuator**: Health, info, env endpoints specifically exposed
 - **OpenAPI**: Swagger UI enabled at `/swagger-ui.html`, package scanning configured
 - **Logging**: SQL queries and parameters visible, custom console pattern
+- **CORS**: Configured for frontend integration at `http://localhost:3000`
 
 ## Performance Optimizations
 
@@ -313,9 +325,13 @@ taskkill /PID <pid> /F
 
 **Database Issues:**
 ```bash
-# Reset H2 database completely
+# Reset H2 database completely (Linux/Mac)
 rm restaurante_db.mv.db restaurante_db.trace.db
 ./gradlew bootRun
+
+# Reset H2 database completely (Windows)
+del restaurante_db.mv.db restaurante_db.trace.db
+gradlew.bat bootRun
 ```
 
 **Lombok Compilation Issues:**
@@ -325,6 +341,22 @@ rm restaurante_db.mv.db restaurante_db.trace.db
 # Ensure IDE has Lombok plugin installed
 ```
 
+## CORS Configuration
+
+### Frontend Integration
+- **Configured Origin**: `http://localhost:3000` (React frontend)
+- **Allowed Methods**: GET, POST, PUT, DELETE, OPTIONS
+- **Headers**: All headers allowed for development
+- **Credentials**: Enabled for session-based authentication
+- **Configuration File**: `src/main/java/org/example/config/CorsConfig.java`
+
+## Testing Infrastructure
+
+### Current State
+- **Test Directory**: `src/test/` exists but no test files implemented
+- **Testing Dependencies**: JUnit Platform included in build.gradle
+- **Next Steps**: Add integration tests for controllers and service layer
+
 ## Build and Testing Status
 
 - **✅ Verified Compilation**: Successfully tested with `./gradlew build`
@@ -332,6 +364,7 @@ rm restaurante_db.mv.db restaurante_db.trace.db
 - **✅ Data Integrity**: All seed data creates without persistence errors
 - **✅ Type Safety**: No casting or conversion errors with updated data types
 - **✅ MercadoPago Integration**: Payment ID casting fix implemented and verified
+- **✅ CORS Configuration**: Frontend integration enabled for localhost:3000
 
 ## Security Considerations
 
